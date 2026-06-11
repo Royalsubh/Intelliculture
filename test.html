@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Tracker</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <script src="/_sdk/element_sdk.js"></script>
+    <script src="/_sdk/data_sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; font-family: 'Outfit', sans-serif; overflow: hidden; }
+
+        .water-bg {
+            background: linear-gradient(180deg, #0a1628 0%, #0d2847 30%, #0f3460 50%, #1a5276 70%, #21618c 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .water-bg::before {
+            content: ''; position: absolute; inset: 0;
+            background: 
+                radial-gradient(ellipse 80% 40% at 50% 100%, rgba(52,152,219,0.25) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 30% at 30% 80%, rgba(41,128,185,0.15) 0%, transparent 60%);
+            animation: waterShimmer 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes waterShimmer {
+            0%, 100% { opacity: 0.7; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-8px); }
+        }
+
+        .bubble {
+            position: absolute; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), rgba(255,255,255,0.03));
+            border: 1px solid rgba(255,255,255,0.08);
+            animation: rise linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+        }
+
+        .glass {
+            background: rgba(255,255,255,0.07);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .glass-light {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+        }
+
+        .glass-btn {
+            background: rgba(52,152,219,0.3);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(52,152,219,0.4);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-btn:hover { background: rgba(52,152,219,0.5); transform: translateY(-2px); }
+
+        .glass-input {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px; color: #fff; padding: 12px 16px; width: 100%;
+        }
+
+        .sidebar-item {
+            padding: 10px 16px; border-radius: 10px; cursor: pointer;
+            transition: all 0.3s ease; color: rgba(255,255,255,0.6);
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .sidebar-item.active { background: rgba(52,152,219,0.25); color: #fff; border: 1px solid rgba(52,152,219,0.3); }
+
+        .progress-ring { transform: rotate(-90deg); }
+        .progress-ring-circle { transition: stroke-dashoffset 1s ease; stroke-linecap: round; }
+
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            padding: 14px 20px; border-radius: 12px;
+            background: rgba(46,204,113,0.2); border: 1px solid rgba(46,204,113,0.4);
+            color: #2ecc71; backdrop-filter: blur(12px);
+            animation: toastIn 0.4s ease forwards;
+        }
+
+        @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100;
+        }
+    </style>
+</head>
+<body class="h-full water-bg text-white">
+    <div id="bubbles" class="absolute inset-0 pointer-events-none"></div>
+
+    <div id="app" class="relative z-10 h-full w-full">
+        
+        <div id="loginScreen" class="h-full w-full flex items-center justify-center p-4">
+            <div class="glass p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
+                        <i data-lucide="graduation-cap" class="w-8 h-8"></i>
+                    </div>
+                    <h1 id="loginTitle" class="text-2xl font-bold mb-1">Performance Tracker</h1>
+                    <p class="text-sm text-white/40">Sign in to your account</p>
+                </div>
+                <div id="loginError" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+                <form id="loginForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-white/50 mb-1">User ID</label>
+                        <input id="loginId" class="glass-input" placeholder="e.g. STU001" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-white/50 mb-1">Password</label>
+                        <input id="loginPass" type="password" class="glass-input" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="glass-btn w-full py-3 font-semibold mt-2">Sign In</button>
+                </form>
+                <div class="mt-6 text-center">
+                    <button onclick="showRegister()" class="text-blue-400 text-sm hover:underline">Create New Account</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="registerScreen" class="h-full w-full hidden items-center justify-center p-4">
+            <div class="glass p-8 w-full max-w-md">
+                <h2 class="text-2xl font-bold mb-6 text-center">Join Portal</h2>
+                <div id="regError" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm"></div>
+                <form id="regForm" class="space-y-4">
+                    <input id="regName" class="glass-input" placeholder="Full Name" required>
+                    <input id="regId" class="glass-input" placeholder="Unique ID (STU... or HOD...)" required>
+                    <input id="regPass" type="password" class="glass-input" placeholder="Password" required>
+                    <select id="regRole" class="glass-input">
+                        <option value="student" class="bg-[#0a1628]">Student</option>
+                        <option value="hod" class="bg-[#0a1628]">HOD</option>
+                    </select>
+                    <button type="submit" class="glass-btn w-full py-3 font-semibold bg-green-500/20 border-green-500/40">Create Account</button>
+                </form>
+                <button onclick="showLogin()" class="w-full mt-4 text-white/40 text-sm">Back to Login</button>
+            </div>
+        </div>
+
+        <div id="studentDash" class="h-full w-full hidden">
+            <div class="flex h-full">
+                <div class="w-64 glass m-3 mr-0 p-4 flex flex-col shrink-0">
+                    <div class="flex items-center gap-3 mb-8 px-2">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center"><i data-lucide="user" class="w-5 h-5"></i></div>
+                        <div class="overflow-hidden">
+                            <div id="stuName" class="font-bold text-sm truncate">Student</div>
+                            <div id="stuId" class="text-xs text-white/40">ID: ---</div>
+                        </div>
+                    </div>
+                    <nav class="space-y-2 flex-1">
+                        <div class="sidebar-item active" onclick="switchTab('overview')"><i data-lucide="layout-dashboard" class="w-4 h-4"></i> Overview</div>
+                        <div class="sidebar-item" onclick="switchTab('academic')"><i data-lucide="book" class="w-4 h-4"></i> Academic</div>
+                        <div class="sidebar-item" onclick="switchTab('coding')"><i data-lucide="code" class="w-4 h-4"></i> Coding</div>
+                        <div class="sidebar-item" onclick="switchTab('placement')"><i data-lucide="target" class="w-4 h-4"></i> Prediction</div>
+                    </nav>
+                    <button onclick="logout()" class="sidebar-item text-red-400 hover:bg-red-500/10"><i data-lucide="log-out" class="w-4 h-4"></i> Sign Out</button>
+                </div>
+                <div class="flex-1 overflow-auto p-6">
+                    <div id="tab-overview" class="tab-content active">
+                        <h2 class="text-2xl font-bold mb-6">Quick Stats</h2>
+                        <div id="overviewStats" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
+                    </div>
+                    <div id="tab-academic" class="tab-content">
+                        <div class="glass-light p-6">
+                            <h2 class="text-xl font-bold mb-4">Update Academic Info</h2>
+                            <form id="academicForm" class="grid grid-cols-2 gap-4">
+                                <input id="inpCgpa" type="number" step="0.01" class="glass-input" placeholder="CGPA (max 10)">
+                                <input id="inpAttendance" type="number" class="glass-input" placeholder="Attendance %">
+                                <button class="glass-btn col-span-2 py-2">Update Record</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="tab-coding" class="tab-content">
+                        <div class="glass-light p-6">
+                            <h2 class="text-xl font-bold mb-4">Coding Platforms</h2>
+                            <form id="codingForm" class="grid grid-cols-2 gap-4">
+                                <input id="inpLeetcode" type="number" class="glass-input" placeholder="LeetCode Solved">
+                                <input id="inpHackerrank" type="number" class="glass-input" placeholder="HackerRank Solved">
+                                <button class="glass-btn col-span-2 py-2">Save Progress</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="tab-placement" class="tab-content">
+                        <div id="placementContent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="hodDash" class="h-full w-full hidden">
+            <div class="flex h-full p-4 gap-4">
+                <div class="w-1/3 glass p-6 overflow-auto">
+                    <h2 class="text-xl font-bold mb-6">Student Directory</h2>
+                    <div id="hodStudentList" class="space-y-3"></div>
+                </div>
+                <div class="flex-1 glass p-6 overflow-auto">
+                    <h2 class="text-xl font-bold mb-6">Department Analytics</h2>
+                    <div id="hodAnalytics" class="grid grid-cols-2 gap-4"></div>
+                </div>
+            </div>
+            <button onclick="logout()" class="fixed bottom-6 left-6 glass-btn px-4 py-2 text-red-400">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        let allRecords = [];
+        let currentUser = null;
+        let sdkReady = false;
+
+        // Init Data SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                allRecords = data;
+                if (currentUser) {
+                    if (currentUser.role === 'student') {
+                        currentUser = allRecords.find(r => r.student_id === currentUser.student_id) || currentUser;
+                        renderStudentDash();
+                    } else {
+                        renderHodDash();
+                    }
+                }
+            }
+        };
+
+        (async () => {
+            const res = await window.dataSdk.init(dataHandler);
+            if (res.isOk) sdkReady = true;
+        })();
+
+        // Bubbles
+        const bubbleContainer = document.getElementById('bubbles');
+        for (let i = 0; i < 20; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            const size = Math.random() * 30 + 10;
+            b.style.width = b.style.height = `${size}px`;
+            b.style.left = `${Math.random() * 100}%`;
+            b.style.animationDuration = `${Math.random() * 10 + 5}s`;
+            b.style.animationDelay = `${Math.random() * 5}s`;
+            bubbleContainer.appendChild(b);
+        }
+
+        // Auth
+        function showScreen(id) {
+            ['loginScreen', 'registerScreen', 'studentDash', 'hodDash'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+                document.getElementById(s).style.display = 'none';
+            });
+            const el = document.getElementById(id);
+            el.classList.remove('hidden');
+            el.style.display = (id.includes('Screen')) ? 'flex' : 'block';
+            lucide.createIcons();
+        }
+
+        function showRegister() { showScreen('registerScreen'); }
+        function showLogin() { showScreen('loginScreen'); }
+        function logout() { currentUser = null; showScreen('loginScreen'); }
+
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('loginId').value;
+            const pass = document.getElementById('loginPass').value;
+            
+            const user = allRecords.find(r => r.student_id === id && r.password === pass);
+            if (!user) {
+                const err = document.getElementById('loginError');
+                err.textContent = "Invalid credentials";
+                err.classList.remove('hidden');
+                return;
+            }
+
+            currentUser = user;
+            if (user.role === 'hod') {
+                showScreen('hodDash');
+                renderHodDash();
+            } else {
+                showScreen('studentDash');
+                document.getElementById('stuName').textContent = user.name;
+                document.getElementById('stuId').textContent = `ID: ${user.student_id}`;
+                renderStudentDash();
+            }
+        };
+
+        document.getElementById('regForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const newUser = {
+                student_id: document.getElementById('regId').value,
+                name: document.getElementById('regName').value,
+                password: document.getElementById('regPass').value,
+                role: document.getElementById('regRole').value,
+                cgpa: 0, attendance: 0, leetcode: 0, hackerrank: 0
+            };
+            const res = await window.dataSdk.create(newUser);
+            if (res.isOk) {
+                alert("Account created!");
+                showLogin();
+            }
+        };
+
+        // Tabs
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            event.currentTarget.classList.add('active');
+            if(tabId === 'placement') renderPlacement();
+        }
+
+        // Logic
+        function calcPlacement(u) {
+            const cgpaPart = (u.cgpa || 0) * 5; // max 50%
+            const codingPart = Math.min(((u.leetcode || 0) + (u.hackerrank || 0)) / 10, 50); // max 50%
+            return Math.min(Math.round(cgpaPart + codingPart), 100);
+        }
+
+        function renderStudentDash() {
+            const stats = document.getElementById('overviewStats');
+            const score = calcPlacement(currentUser);
+            stats.innerHTML = `
+                <div class="glass-light p-4 text-center">
+                    <div class="text-white/50 text-xs uppercase mb-1">CGPA</div>
+                    <div class="text-2xl font-bold text-blue-400">${currentUser.cgpa || 0}</div>
+                </div>
+                <div class="glass-light p-4 text-center">
+                    <div class="text-white/50 text-xs uppercase mb-1">Solved</div>
+                    <div class="text-2xl font-bold text-purple-400">${(currentUser.leetcode || 0) + (currentUser.hackerrank || 0)}</div>
+                </div>
+                <div class="glass-light p-4 text-center">
+                    <div class="text-white/50 text-xs uppercase mb-1">Prediction</div>
+                    <div class="text-2xl font-bold text-green-400">${score}%</div>
+                </div>
+            `;
+        }
+
+        function renderPlacement() {
+            const score = calcPlacement(currentUser);
+            const content = document.getElementById('placementContent');
+            content.innerHTML = `
+                <div class="glass-light p-8 text-center">
+                    <h2 class="text-3xl font-bold mb-4">Placement Probability</h2>
+                    <div class="relative w-48 h-48 mx-auto mb-6">
+                        <svg class="w-full h-full progress-ring">
+                            <circle cx="96" cy="96" r="88" stroke="rgba(255,255,255,0.1)" stroke-width="12" fill="none"/>
+                            <circle cx="96" cy="96" r="88" stroke="#2ecc71" stroke-width="12" fill="none" 
+                                stroke-dasharray="552.9" stroke-dashoffset="${552.9 - (score/100)*552.9}"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center text-4xl font-bold">${score}%</div>
+                    </div>
+                    <p class="text-white/60">Based on your current academic and coding metrics.</p>
+                </div>
+            `;
+        }
+
+        function renderHodDash() {
+            const list = document.getElementById('hodStudentList');
+            const students = allRecords.filter(r => r.role === 'student');
+            list.innerHTML = students.map(s => `
+                <div class="glass-light p-3 flex justify-between items-center">
+                    <div>
+                        <div class="font-bold">${s.name}</div>
+                        <div class="text-xs text-white/40">${s.student_id}</div>
+                    </div>
+                    <div class="text-green-400 font-bold">${calcPlacement(s)}%</div>
+                </div>
+            `).join('');
+            
+            const analytics = document.getElementById('hodAnalytics');
+            const avg = students.length ? students.reduce((a, b) => a + calcPlacement(b), 0) / students.length : 0;
+            analytics.innerHTML = `
+                <div class="glass-light p-6 text-center">
+                    <div class="text-sm text-white/50">Avg Placement</div>
+                    <div class="text-4xl font-bold text-blue-400">${Math.round(avg)}%</div>
+                </div>
+                <div class="glass-light p-6 text-center">
+                    <div class="text-sm text-white/50">Students</div>
+                    <div class="text-4xl font-bold text-white">${students.length}</div>
+                </div>
+            `;
+        }
+
+        // Form handlers
+        document.getElementById('academicForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const updated = {
+                ...currentUser,
+                cgpa: parseFloat(document.getElementById('inpCgpa').value) || currentUser.cgpa,
+                attendance: parseInt(document.getElementById('inpAttendance').value) || currentUser.attendance
+            };
+            await window.dataSdk.update(updated);
+            alert("Academics updated!");
+        };
+
+        document.getElementById('codingForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const updated = {
+                ...currentUser,
+                leetcode: parseInt(document.getElementById('inpLeetcode').value) || currentUser.leetcode,
+                hackerrank: parseInt(document.getElementById('inpHackerrank').value) || currentUser.hackerrank
+            };
+            await window.dataSdk.update(updated);
+            alert("Coding stats updated!");
+        };
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

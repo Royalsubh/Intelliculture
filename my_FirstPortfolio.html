@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Portfolio</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+html, body { height: 100%; margin: 0; }
+* { box-sizing: border-box; }
+
+.portfolio-wrap {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Animated gradient orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+  animation: orbFloat 8s ease-in-out infinite alternate;
+}
+.orb-1 { width: 400px; height: 400px; top: -100px; left: -100px; }
+.orb-2 { width: 300px; height: 300px; bottom: -50px; right: -50px; animation-delay: -3s; }
+.orb-3 { width: 250px; height: 250px; top: 50%; left: 60%; animation-delay: -5s; }
+
+@keyframes orbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, -20px) scale(1.1); }
+}
+
+/* Staggered reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: revealUp 0.7s ease forwards;
+}
+.reveal-d1 { animation-delay: 0.1s; }
+.reveal-d2 { animation-delay: 0.2s; }
+.reveal-d3 { animation-delay: 0.35s; }
+.reveal-d4 { animation-delay: 0.5s; }
+.reveal-d5 { animation-delay: 0.65s; }
+.reveal-d6 { animation-delay: 0.8s; }
+
+@keyframes revealUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Profile image placeholder */
+.profile-ring {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  padding: 4px;
+}
+.profile-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  animation: ringRotate 4s linear infinite;
+}
+@keyframes ringRotate {
+  to { transform: rotate(360deg); }
+}
+.profile-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 800;
+  overflow: hidden;
+}
+
+/* Platform cards hover */
+.platform-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+.platform-card:hover {
+  transform: translateY(-6px);
+}
+
+/* Glowing line */
+.glow-line {
+  height: 2px;
+  width: 60px;
+  border-radius: 2px;
+}
+
+/* Nav dot */
+.nav-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.nav-dot.active {
+  transform: scale(1.4);
+}
+
+/* Typing cursor */
+.typing-cursor::after {
+  content: '|';
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Scrollbar */
+.portfolio-wrap::-webkit-scrollbar { width: 6px; }
+.portfolio-wrap::-webkit-scrollbar-track { background: transparent; }
+.portfolio-wrap::-webkit-scrollbar-thumb { border-radius: 3px; }
+
+/* Section minimum heights */
+.section-block {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 60px 24px;
+}
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="portfolio-wrap w-full" style="background:#0a0a0f;">
+   <!-- Fixed side nav -->
+   <nav class="fixed right-6 top-1/2 z-50 flex flex-col gap-3" style="transform:translateY(-50%);">
+    <div class="nav-dot active" data-section="hero" onclick="scrollToSection('hero')" title="Home"></div>
+    <div class="nav-dot" data-section="about" onclick="scrollToSection('about')" title="About"></div>
+    <div class="nav-dot" data-section="platforms" onclick="scrollToSection('platforms')" title="Platforms"></div>
+    <div class="nav-dot" data-section="contact" onclick="scrollToSection('contact')" title="Contact"></div>
+   </nav><!-- ==================== HERO SECTION ==================== -->
+   <section id="hero" class="section-block">
+    <div class="orb orb-1" id="orb1"></div>
+    <div class="orb orb-2" id="orb2"></div>
+    <div class="text-center relative z-10">
+     <div class="flex justify-center mb-8 reveal reveal-d1">
+      <div class="profile-ring" id="profileRing">
+       <div class="profile-inner" id="profileInner">
+        <!-- 
+              ============================================
+              YOUR PROFILE IMAGE
+              Replace the initials below with an <img> tag:
+              <img src="https://your-image-url.jpg" alt="Your Name" class="w-full h-full object-cover">
+              ============================================
+            --> <span id="profileInitials">YN</span>
+       </div>
+      </div>
+     </div>
+     <div class="reveal reveal-d2 flex justify-center mb-4">
+      <div class="glow-line" id="glowLine1"></div>
+     </div>
+     <h1 id="heroName" class="text-5xl md:text-7xl font-extrabold mb-3 reveal reveal-d3 tracking-tight" style="font-family:'Syne',sans-serif;">Your Name</h1>
+     <p id="heroTitle" class="text-lg md:text-xl font-mono tracking-widest uppercase reveal reveal-d4 typing-cursor" style="font-family:'Space Mono',monospace;">Full Stack Developer</p>
+     <div class="mt-10 reveal reveal-d5 flex gap-4 justify-center">
+      <button onclick="scrollToSection('about')" class="px-6 py-3 rounded-full font-semibold text-sm tracking-wide transition-all hover:scale-105" style="font-family:'Syne',sans-serif;" id="ctaBtn"> Explore More </button> <button onclick="scrollToSection('contact')" class="px-6 py-3 rounded-full font-semibold text-sm tracking-wide border-2 transition-all hover:scale-105" style="font-family:'Syne',sans-serif;" id="ctaBtn2"> Contact Me </button>
+     </div>
+    </div>
+   </section><!-- ==================== ABOUT SECTION ==================== -->
+   <section id="about" class="section-block">
+    <div class="orb orb-3" id="orb3"></div>
+    <div class="max-w-3xl mx-auto relative z-10 w-full">
+     <p class="font-mono text-xs tracking-[0.3em] uppercase mb-2 reveal reveal-d1" style="font-family:'Space Mono',monospace;" id="aboutLabel">&lt;about&gt;</p>
+     <h2 class="text-4xl md:text-5xl font-extrabold mb-8 reveal reveal-d2" style="font-family:'Syne',sans-serif;" id="aboutHeading">About Me</h2>
+     <div class="rounded-2xl p-8 md:p-10 reveal reveal-d3" id="aboutCard" style="backdrop-filter:blur(10px);">
+      <p id="aboutText" class="text-lg leading-relaxed" style="font-family:'Space Mono',monospace;"><!--
+            ============================================
+            YOUR ABOUT TEXT
+            Replace this paragraph with your own bio.
+            ============================================
+          --> I'm a passionate software developer who loves crafting elegant solutions to complex problems. With expertise in modern web technologies, I build performant, accessible, and beautiful applications. When I'm not coding, you'll find me exploring open-source projects and contributing to the developer community.</p>
+      <div class="mt-8 flex flex-wrap gap-3" id="skillTags">
+       <!--
+            ============================================
+            YOUR SKILLS
+            Add/remove/edit skill tags below.
+            ============================================
+          --> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">JavaScript</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">TypeScript</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">React</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">Node.js</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">Python</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">PostgreSQL</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">Docker</span> <span class="skill-tag px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase" style="font-family:'Syne',sans-serif;">AWS</span>
+      </div>
+     </div>
+     <p class="font-mono text-xs tracking-[0.3em] uppercase mt-4 text-right reveal reveal-d4" style="font-family:'Space Mono',monospace;" id="aboutLabelClose">&lt;/about&gt;</p>
+    </div>
+   </section><!-- ==================== CODING PLATFORMS SECTION ==================== -->
+   <section id="platforms" class="section-block">
+    <div class="max-w-4xl mx-auto relative z-10 w-full">
+     <p class="font-mono text-xs tracking-[0.3em] uppercase mb-2 reveal reveal-d1" style="font-family:'Space Mono',monospace;" id="platLabel">&lt;profiles&gt;</p>
+     <h2 class="text-4xl md:text-5xl font-extrabold mb-10 reveal reveal-d2" style="font-family:'Syne',sans-serif;" id="platHeading">Coding Profiles</h2>
+     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="platformGrid">
+      <!--
+          ============================================
+          YOUR CODING PLATFORM PROFILES
+          Edit the URLs and usernames below.
+          Add or remove cards as needed.
+          ============================================
+        --> <!-- GitHub --> <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" class="platform-card rounded-2xl p-6 reveal reveal-d2 block" id="card-github">
+       <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" id="icon-github">
+         <i data-lucide="github" class="w-6 h-6"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-lg" style="font-family:'Syne',sans-serif;">GitHub</h3>
+         <p class="text-xs font-mono opacity-60">@yourusername</p>
+        </div>
+       </div><p class="text-sm opacity-70" style="font-family:'Space Mono',monospace;">Open source contributions &amp; projects</p></a> <!-- LeetCode --> <a href="https://leetcode.com/yourusername" target="_blank" rel="noopener noreferrer" class="platform-card rounded-2xl p-6 reveal reveal-d3 block" id="card-leetcode">
+       <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" id="icon-leetcode">
+         <i data-lucide="code-2" class="w-6 h-6"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-lg" style="font-family:'Syne',sans-serif;">LeetCode</h3>
+         <p class="text-xs font-mono opacity-60">@yourusername</p>
+        </div>
+       </div><p class="text-sm opacity-70" style="font-family:'Space Mono',monospace;">500+ problems solved</p></a> <!-- CodeForces --> <a href="https://codeforces.com/profile/yourusername" target="_blank" rel="noopener noreferrer" class="platform-card rounded-2xl p-6 reveal reveal-d3 block" id="card-codeforces">
+       <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" id="icon-codeforces">
+         <i data-lucide="trophy" class="w-6 h-6"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-lg" style="font-family:'Syne',sans-serif;">CodeForces</h3>
+         <p class="text-xs font-mono opacity-60">@yourusername</p>
+        </div>
+       </div><p class="text-sm opacity-70" style="font-family:'Space Mono',monospace;">Competitive programming</p></a> <!-- HackerRank --> <a href="https://hackerrank.com/yourusername" target="_blank" rel="noopener noreferrer" class="platform-card rounded-2xl p-6 reveal reveal-d4 block" id="card-hackerrank">
+       <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" id="icon-hackerrank">
+         <i data-lucide="award" class="w-6 h-6"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-lg" style="font-family:'Syne',sans-serif;">HackerRank</h3>
+         <p class="text-xs font-mono opacity-60">@yourusername</p>
+        </div>
+       </div><p class="text-sm opacity-70" style="font-family:'Space Mono',monospace;">5★ in Problem Solving</p></a> <!-- Stack Overflow --> <a href="https://stackoverflow.com/users/yourid" target="_blank" rel="noopener noreferrer" class="platform-card rounded-2xl p-6 reveal reveal-d4 block" id="card-stackoverflow">
+       <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" id="icon-stackoverflow">
+         <i data-lucide="layers" class="w-6 h-6"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-lg" style="font-family:'Syne',sans-serif;">Stack Overflow</h3>
+         <p class="text-xs font-mono opacity-60">2k+ reputation</p>
+        </div>
+       </div><p class="text-sm opacity-70" style="font-family:'Space Mono',monospace;">Helping the dev community</p></a> <!-- LinkedIn --> <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer" class="platform-card rounded-2xl p-6 reveal reveal-d5 block" id="card-linkedin">
+       <div class="flex items-center gap-3 mb-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" id="icon-linkedin">
+         <i data-lucide="linkedin" class="w-6 h-6"></i>
+        </div>
+        <div>
+         <h3 class="font-bold text-lg" style="font-family:'Syne',sans-serif;">LinkedIn</h3>
+         <p class="text-xs font-mono opacity-60">Professional network</p>
+        </div>
+       </div><p class="text-sm opacity-70" style="font-family:'Space Mono',monospace;">Connect professionally</p></a>
+     </div>
+     <p class="font-mono text-xs tracking-[0.3em] uppercase mt-6 text-right reveal reveal-d6" style="font-family:'Space Mono',monospace;" id="platLabelClose">&lt;/profiles&gt;</p>
+    </div>
+   </section><!-- ==================== CONTACT SECTION ==================== -->
+   <section id="contact" class="section-block">
+    <div class="max-w-2xl mx-auto relative z-10 w-full text-center">
+     <p class="font-mono text-xs tracking-[0.3em] uppercase mb-2 reveal reveal-d1" style="font-family:'Space Mono',monospace;" id="contactLabel">&lt;contact&gt;</p>
+     <h2 class="text-4xl md:text-5xl font-extrabold mb-4 reveal reveal-d2" style="font-family:'Syne',sans-serif;" id="contactHeading">Let's Connect</h2>
+     <p class="text-lg mb-10 opacity-70 reveal reveal-d3" style="font-family:'Space Mono',monospace;" id="contactSub">Got a project in mind? Let's talk.</p>
+     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+      <!--
+          ============================================
+          YOUR CONTACT DETAILS
+          Edit email, phone, and location below.
+          ============================================
+        -->
+      <div class="rounded-2xl p-6 reveal reveal-d3" id="contactCard1">
+       <div class="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" id="contactIcon1">
+        <i data-lucide="mail" class="w-6 h-6"></i>
+       </div>
+       <h4 class="font-bold mb-1" style="font-family:'Syne',sans-serif;">Email</h4>
+       <p class="text-sm font-mono opacity-70" id="contactEmail">your@email.com</p>
+      </div>
+      <div class="rounded-2xl p-6 reveal reveal-d4" id="contactCard2">
+       <div class="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" id="contactIcon2">
+        <i data-lucide="phone" class="w-6 h-6"></i>
+       </div>
+       <h4 class="font-bold mb-1" style="font-family:'Syne',sans-serif;">Phone</h4>
+       <p class="text-sm font-mono opacity-70" id="contactPhone">+1 234 567 890</p>
+      </div>
+      <div class="rounded-2xl p-6 reveal reveal-d5" id="contactCard3">
+       <div class="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" id="contactIcon3">
+        <i data-lucide="map-pin" class="w-6 h-6"></i>
+       </div>
+       <h4 class="font-bold mb-1" style="font-family:'Syne',sans-serif;">Location</h4>
+       <p class="text-sm font-mono opacity-70" id="contactLocation">City, Country</p>
+      </div>
+     </div><!-- Social row -->
+     <div class="flex justify-center gap-4 reveal reveal-d6">
+      <!--
+          ============================================
+          YOUR SOCIAL LINKS
+          Edit the href URLs below.
+          ============================================
+        --> <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110" id="socialGh"> <i data-lucide="github" class="w-5 h-5"></i> </a> <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110" id="socialLi"> <i data-lucide="linkedin" class="w-5 h-5"></i> </a> <a href="https://twitter.com/yourusername" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110" id="socialTw"> <i data-lucide="twitter" class="w-5 h-5"></i> </a> <a href="mailto:your@email.com" class="w-12 h-12 rounded-full flex items-center justify-center transition-transform hover:scale-110" id="socialMa"> <i data-lucide="mail" class="w-5 h-5"></i> </a>
+     </div>
+     <p class="font-mono text-xs tracking-[0.3em] uppercase mt-10 reveal reveal-d6" style="font-family:'Space Mono',monospace;" id="contactLabelClose">&lt;/contact&gt;</p>
+     <p class="mt-6 text-xs opacity-30 font-mono reveal reveal-d6" id="footer">© 2025 Your Name. Built with ❤️</p>
+    </div>
+   </section>
+  </div>
+  <script>
+  // ====== COLOR & CONFIG SYSTEM ======
+  const defaultConfig = {
+    background_color: '#0a0a0f',
+    surface_color: '#14141f',
+    text_color: '#e8e6e3',
+    primary_action: '#00e5a0',
+    secondary_action: '#1a1a2e',
+    font_family: 'Syne',
+    font_size: 16,
+    developer_name: 'Your Name',
+    developer_title: 'Full Stack Developer',
+    about_text: "I'm a passionate software developer who loves crafting elegant solutions to complex problems. With expertise in modern web technologies, I build performant, accessible, and beautiful applications. When I'm not coding, you'll find me exploring open-source projects and contributing to the developer community.",
+    contact_email: 'your@email.com',
+    contact_phone: '+1 234 567 890',
+    contact_location: 'City, Country'
+  };
+
+  // Initialize scrollbar style immediately
+  const sbStyle = document.createElement('style');
+  sbStyle.id = 'sb-style';
+  sbStyle.textContent = `.portfolio-wrap::-webkit-scrollbar-thumb{background:#00e5a044;} .portfolio-wrap::-webkit-scrollbar-thumb:hover{background:#00e5a088;}`;
+  document.head.appendChild(sbStyle);
+
+  function applyConfig(config) {
+    const bg = config.background_color || defaultConfig.background_color;
+    const surface = config.surface_color || defaultConfig.surface_color;
+    const text = config.text_color || defaultConfig.text_color;
+    const primary = config.primary_action || defaultConfig.primary_action;
+    const secondary = config.secondary_action || defaultConfig.secondary_action;
+    const font = config.font_family || defaultConfig.font_family;
+    const fontSize = config.font_size || defaultConfig.font_size;
+
+    const app = document.getElementById('app');
+    app.style.backgroundColor = bg;
+    app.style.color = text;
+
+    // Orbs
+    document.getElementById('orb1').style.background = primary;
+    document.getElementById('orb2').style.background = primary;
+    document.getElementById('orb3').style.background = primary;
+
+    // Profile ring
+    const ring = document.getElementById('profileRing');
+    ring.querySelector('.profile-inner').style.backgroundColor = surface;
+    ring.querySelector('.profile-inner').style.color = primary;
+    ring.style.background = `linear-gradient(135deg, ${primary}, ${secondary})`;
+
+    // Glow line
+    document.getElementById('glowLine1').style.background = primary;
+
+    // Hero text
+    const heroName = document.getElementById('heroName');
+    heroName.textContent = config.developer_name || defaultConfig.developer_name;
+    heroName.style.fontFamily = `${font}, sans-serif`;
+    heroName.style.color = text;
+
+    // Initials
+    const name = config.developer_name || defaultConfig.developer_name;
+    const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+    document.getElementById('profileInitials').textContent = initials;
+
+    const heroTitle = document.getElementById('heroTitle');
+    heroTitle.textContent = config.developer_title || defaultConfig.developer_title;
+    heroTitle.style.color = primary;
+
+    // CTA buttons
+    const ctaBtn = document.getElementById('ctaBtn');
+    ctaBtn.style.backgroundColor = primary;
+    ctaBtn.style.color = bg;
+    ctaBtn.style.fontFamily = `${font}, sans-serif`;
+
+    const ctaBtn2 = document.getElementById('ctaBtn2');
+    ctaBtn2.style.borderColor = primary;
+    ctaBtn2.style.color = primary;
+    ctaBtn2.style.backgroundColor = 'transparent';
+    ctaBtn2.style.fontFamily = `${font}, sans-serif`;
+
+    // Nav dots
+    document.querySelectorAll('.nav-dot').forEach(d => {
+      d.style.borderColor = primary;
+      if (d.classList.contains('active')) {
+        d.style.backgroundColor = primary;
+      } else {
+        d.style.backgroundColor = 'transparent';
+      }
+    });
+
+    // About section
+    document.getElementById('aboutHeading').style.fontFamily = `${font}, sans-serif`;
+    document.getElementById('aboutHeading').style.color = text;
+    document.getElementById('aboutLabel').style.color = primary;
+    document.getElementById('aboutLabelClose').style.color = primary;
+    
+    const aboutCard = document.getElementById('aboutCard');
+    aboutCard.style.backgroundColor = surface;
+    aboutCard.style.border = `1px solid ${secondary}`;
+
+    const aboutText = document.getElementById('aboutText');
+    aboutText.textContent = config.about_text || defaultConfig.about_text;
+    aboutText.style.color = text;
+    aboutText.style.fontSize = `${fontSize}px`;
+
+    // Skill tags
+    document.querySelectorAll('.skill-tag').forEach(tag => {
+      tag.style.backgroundColor = secondary;
+      tag.style.color = primary;
+      tag.style.border = `1px solid ${primary}33`;
+      tag.style.fontFamily = `${font}, sans-serif`;
+    });
+
+    // Platform cards
+    const platformCards = document.querySelectorAll('.platform-card');
+    platformCards.forEach(card => {
+      card.style.backgroundColor = surface;
+      card.style.border = `1px solid ${secondary}`;
+      card.style.color = text;
+    });
+
+    // Platform icon boxes
+    ['github','leetcode','codeforces','hackerrank','stackoverflow','linkedin'].forEach(id => {
+      const el = document.getElementById('icon-' + id);
+      if (el) {
+        el.style.backgroundColor = secondary;
+        el.style.color = primary;
+      }
+    });
+
+    // Platform headings
+    document.getElementById('platHeading').style.fontFamily = `${font}, sans-serif`;
+    document.getElementById('platHeading').style.color = text;
+    document.getElementById('platLabel').style.color = primary;
+    document.getElementById('platLabelClose').style.color = primary;
+
+    // Contact section
+    document.getElementById('contactHeading').style.fontFamily = `${font}, sans-serif`;
+    document.getElementById('contactHeading').style.color = text;
+    document.getElementById('contactLabel').style.color = primary;
+    document.getElementById('contactLabelClose').style.color = primary;
+    document.getElementById('contactSub').style.color = text;
+
+    document.getElementById('contactEmail').textContent = config.contact_email || defaultConfig.contact_email;
+    document.getElementById('contactPhone').textContent = config.contact_phone || defaultConfig.contact_phone;
+    document.getElementById('contactLocation').textContent = config.contact_location || defaultConfig.contact_location;
+
+    ['contactCard1','contactCard2','contactCard3'].forEach(id => {
+      const el = document.getElementById(id);
+      el.style.backgroundColor = surface;
+      el.style.border = `1px solid ${secondary}`;
+    });
+    ['contactIcon1','contactIcon2','contactIcon3'].forEach(id => {
+      const el = document.getElementById(id);
+      el.style.backgroundColor = secondary;
+      el.style.color = primary;
+    });
+
+    // Social icons
+    ['socialGh','socialLi','socialTw','socialMa'].forEach(id => {
+      const el = document.getElementById(id);
+      el.style.backgroundColor = surface;
+      el.style.border = `1px solid ${secondary}`;
+      el.style.color = primary;
+    });
+
+    // Footer
+    document.getElementById('footer').style.color = text;
+
+    // Font sizing
+    document.getElementById('heroName').style.fontSize = `${fontSize * 3.2}px`;
+    document.getElementById('heroTitle').style.fontSize = `${fontSize * 1.1}px`;
+    document.getElementById('aboutHeading').style.fontSize = `${fontSize * 2.8}px`;
+    document.getElementById('platHeading').style.fontSize = `${fontSize * 2.8}px`;
+    document.getElementById('contactHeading').style.fontSize = `${fontSize * 2.8}px`;
+
+    // Scrollbar
+    app.style.setProperty('--sb-thumb', primary);
+    const sbStyle = document.getElementById('sb-style');
+    if (sbStyle) sbStyle.remove();
+    const s = document.createElement('style');
+    s.id = 'sb-style';
+    s.textContent = `.portfolio-wrap::-webkit-scrollbar-thumb{background:${primary}44;} .portfolio-wrap::-webkit-scrollbar-thumb:hover{background:${primary}88;}`;
+    document.head.appendChild(s);
+  }
+
+  // ====== SCROLL NAV ======
+  function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+  }
+
+  const appEl = document.getElementById('app');
+  appEl.addEventListener('scroll', () => {
+    const sections = ['hero','about','platforms','contact'];
+    let current = sections[0];
+    sections.forEach(s => {
+      const el = document.getElementById(s);
+      if (el.offsetTop - appEl.scrollTop < appEl.clientHeight * 0.5) current = s;
+    });
+    document.querySelectorAll('.nav-dot').forEach(d => {
+      const isActive = d.dataset.section === current;
+      d.classList.toggle('active', isActive);
+      const primary = window.elementSdk?.config?.primary_action || defaultConfig.primary_action;
+      d.style.backgroundColor = isActive ? primary : 'transparent';
+    });
+  });
+
+  // ====== ELEMENT SDK INIT ======
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => { applyConfig(config); },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+        { get: () => config.primary_action || defaultConfig.primary_action, set: (v) => { config.primary_action = v; window.elementSdk.setConfig({ primary_action: v }); } },
+        { get: () => config.secondary_action || defaultConfig.secondary_action, set: (v) => { config.secondary_action = v; window.elementSdk.setConfig({ secondary_action: v }); } }
+      ],
+      borderables: [],
+      fontEditable: {
+        get: () => config.font_family || defaultConfig.font_family,
+        set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+      },
+      fontSizeable: {
+        get: () => config.font_size || defaultConfig.font_size,
+        set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+      }
+    }),
+    mapToEditPanelValues: (config) => new Map([
+      ['developer_name', config.developer_name || defaultConfig.developer_name],
+      ['developer_title', config.developer_title || defaultConfig.developer_title],
+      ['about_text', config.about_text || defaultConfig.about_text],
+      ['contact_email', config.contact_email || defaultConfig.contact_email],
+      ['contact_phone', config.contact_phone || defaultConfig.contact_phone],
+      ['contact_location', config.contact_location || defaultConfig.contact_location]
+    ])
+  });
+
+  applyConfig(defaultConfig);
+  lucide.createIcons();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e75f0b47477f56a',t:'MTc3NTM2NDcxNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

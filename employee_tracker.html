@@ -1,0 +1,2025 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntelliCulture - Employee Activity Tracker</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body, #app {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #e2e8f0;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); }
+    }
+
+    .animate-slide { animation: slideIn 0.5s ease-out; }
+    .animate-fade { animation: fadeIn 0.3s ease-in; }
+    .glow-pulse { animation: pulse-glow 2s infinite; }
+
+    /* Cards */
+    .glass-card {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 12px;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(148, 163, 184, 0.2);
+      background: rgba(30, 41, 59, 0.95);
+      transition: all 0.3s ease;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: rgba(51, 65, 85, 0.8);
+      color: #e2e8f0;
+      padding: 10px 20px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(71, 85, 105, 0.8);
+      border-color: rgba(148, 163, 184, 0.4);
+    }
+
+    /* Forms */
+    input, textarea, select {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      background: rgba(15, 23, 42, 0.95);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid rgba(96, 165, 250, 0.3);
+    }
+
+    .badge-success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border-color: rgba(74, 222, 128, 0.3);
+    }
+
+    .badge-warning {
+      background: rgba(251, 146, 60, 0.2);
+      color: #fb923c;
+      border-color: rgba(251, 146, 60, 0.3);
+    }
+
+    .badge-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(59, 130, 246, 0.4);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(59, 130, 246, 0.6);
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(59, 130, 246, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Chart styles */
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: 20px 0;
+    }
+
+    .stat-box {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-box .value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #60a5fa;
+      margin: 10px 0;
+    }
+
+    .stat-box .label {
+      font-size: 12px;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body>
+  <div id="app" class="h-full w-full overflow-hidden"></div>
+  <script>
+    // ============================================
+    // DATA MODELS & AI ENGINE
+    // ============================================
+
+    class PerformanceAI {
+      static calculatePerformanceScore(employee) {
+        const weights = {
+          gitCommits: 0.25,
+          tasksCompleted: 0.25,
+          meetingsAttended: 0.15,
+          jiraTickets: 0.15,
+          workHours: 0.20
+        };
+
+        const maxMetrics = {
+          gitCommits: 100,
+          tasksCompleted: 50,
+          meetingsAttended: 30,
+          jiraTickets: 50,
+          workHours: 160
+        };
+
+        let score = 0;
+        for (const [metric, weight] of Object.entries(weights)) {
+          const normalized = Math.min(employee[metric] || 0, maxMetrics[metric]) / maxMetrics[metric];
+          score += normalized * weight * 100;
+        }
+
+        return Math.round(score);
+      }
+
+      static detectBurnout(employee) {
+        const workHours = employee.workHours || 0;
+        const consistency = employee.streak || 0;
+        const lastActive = new Date(employee.lastActive || new Date());
+        const daysSinceActive = Math.floor((Date.now() - lastActive) / (1000 * 60 * 60 * 24));
+
+        let burnoutScore = 0;
+
+        if (workHours > 50) burnoutScore += 30; // Excessive work
+        if (workHours < 20) burnoutScore += 20; // Inconsistent work
+        if (consistency < 5) burnoutScore += 20; // Low streak
+        if (daysSinceActive > 3) burnoutScore += 30; // Inactive
+
+        if (burnoutScore >= 60) return 'high';
+        if (burnoutScore >= 40) return 'medium';
+        return 'low';
+      }
+
+      static generateTrendAnalysis(employee) {
+        const trend = {
+          trajectory: 'stable',
+          prediction: 'likely_to_maintain',
+          insights: []
+        };
+
+        const score = this.calculatePerformanceScore(employee);
+
+        if (employee.streak > 7) {
+          trend.trajectory = 'upward';
+          trend.prediction = 'likely_to_improve';
+          trend.insights.push('🚀 Strong momentum with current streak');
+        } else if (employee.streak > 3) {
+          trend.trajectory = 'stable';
+          trend.prediction = 'likely_to_maintain';
+          trend.insights.push('✅ Steady performance');
+        } else {
+          trend.trajectory = 'downward';
+          trend.prediction = 'needs_attention';
+          trend.insights.push('⚠️ Recent activity drop detected');
+        }
+
+        if (score > 80) trend.insights.push('⭐ Top performer');
+        if (employee.workHours > 50) trend.insights.push('⏰ Consider workload balance');
+
+        return trend;
+      }
+
+      static suggestTasks(employee, availableTasks) {
+        const score = this.calculatePerformanceScore(employee);
+        
+        return availableTasks
+          .filter(task => {
+            if (score > 80 && task.priority === 'high') return true;
+            if (score > 60 && task.priority !== 'critical') return true;
+            return task.priority !== 'high';
+          })
+          .sort((a, b) => {
+            const priorityMap = { critical: 3, high: 2, medium: 1, low: 0 };
+            return priorityMap[b.priority] - priorityMap[a.priority];
+          })
+          .slice(0, 3);
+      }
+
+      static findBestEmployee(taskTitle, taskPriority, employees) {
+        // Analyze task requirements based on keywords
+        const taskLower = taskTitle.toLowerCase();
+        const skillMap = {
+          'frontend': { skill: 'frontend', weight: 1 },
+          'backend': { skill: 'backend', weight: 1 },
+          'design': { skill: 'design', weight: 1 },
+          'api': { skill: 'backend', weight: 0.8 },
+          'database': { skill: 'backend', weight: 0.9 },
+          'authentication': { skill: 'backend', weight: 0.85 },
+          'ui': { skill: 'frontend', weight: 0.9 },
+          'bug': { skill: 'general', weight: 0.7 },
+          'feature': { skill: 'general', weight: 0.8 },
+          'test': { skill: 'general', weight: 0.6 },
+          'documentation': { skill: 'general', weight: 0.5 },
+          'review': { skill: 'general', weight: 0.7 }
+        };
+
+        // Score each employee
+        const scoredEmployees = employees
+          .filter(emp => {
+            // Filter out employees who are already overloaded
+            const assignedTasks = State.tasks.filter(t => t.taskAssignedTo === emp.email).length;
+            return assignedTasks < 5; // Max 5 tasks per employee
+          })
+          .map(emp => {
+            let score = 0;
+            const perfScore = this.calculatePerformanceScore(emp);
+            const burnout = this.detectBurnout(emp);
+
+            // Base score from performance
+            score += perfScore * 0.4;
+
+            // Burnout penalty
+            if (burnout === 'high') score -= 30;
+            if (burnout === 'medium') score -= 10;
+
+            // Task priority matching
+            if (taskPriority === 'critical') {
+              score += perfScore > 75 ? 20 : perfScore > 60 ? 10 : 0;
+            } else if (taskPriority === 'high') {
+              score += perfScore > 70 ? 15 : perfScore > 50 ? 5 : 0;
+            }
+
+            // Skill detection from task title
+            for (const [keyword, skillData] of Object.entries(skillMap)) {
+              if (taskLower.includes(keyword)) {
+                // Check if employee has relevant metrics
+                if (skillData.skill === 'frontend' && emp.gitCommits > 20) {
+                  score += 15 * skillData.weight;
+                } else if (skillData.skill === 'backend' && emp.jiraTickets > 15) {
+                  score += 15 * skillData.weight;
+                } else if (skillData.skill === 'design' && emp.meetingsAttended > 15) {
+                  score += 10 * skillData.weight;
+                } else if (skillData.skill === 'general') {
+                  score += 5 * skillData.weight;
+                }
+              }
+            }
+
+            // Streak bonus (shows consistency)
+            score += emp.streak * 1.5;
+
+            // Current workload (fewer tasks = higher priority)
+            const currentTasks = State.tasks.filter(t => t.taskAssignedTo === emp.email).length;
+            score += (5 - currentTasks) * 2;
+
+            return {
+              employee: emp,
+              score: Math.max(0, score),
+              reason: this.generateMatchReason(emp, taskTitle, perfScore, burnout)
+            };
+          })
+          .sort((a, b) => b.score - a.score);
+
+        return scoredEmployees[0] || null;
+      }
+
+      static generateMatchReason(employee, taskTitle, perfScore, burnout) {
+        const reasons = [];
+
+        if (perfScore > 80) {
+          reasons.push('Top performer');
+        } else if (perfScore > 60) {
+          reasons.push('Strong performer');
+        }
+
+        if (employee.streak > 5) {
+          reasons.push(`${employee.streak}-day streak`);
+        }
+
+        const currentTasks = State.tasks.filter(t => t.taskAssignedTo === employee.email).length;
+        if (currentTasks < 2) {
+          reasons.push('Light workload');
+        }
+
+        if (burnout === 'low') {
+          reasons.push('Good health');
+        }
+
+        if (employee.gitCommits > 30) {
+          reasons.push('Strong coder');
+        }
+
+        return reasons.slice(0, 3).join(' • ');
+      }
+
+      static generateInsights(employee) {
+        const insights = [];
+        const score = this.calculatePerformanceScore(employee);
+        const burnout = this.detectBurnout(employee);
+
+        if (score > 85) {
+          insights.push({
+            type: 'positive',
+            text: '🌟 Exceptional contributor! Keep maintaining this pace.',
+            emoji: '⭐'
+          });
+        }
+
+        if (burnout === 'high') {
+          insights.push({
+            type: 'warning',
+            text: '🔥 Burnout risk detected. Consider workload adjustment.',
+            emoji: '⚠️'
+          });
+        }
+
+        if (employee.gitCommits < 5) {
+          insights.push({
+            type: 'suggestion',
+            text: '💡 Increase code contributions for better visibility.',
+            emoji: '💭'
+          });
+        }
+
+        if (employee.meetingsAttended > 15) {
+          insights.push({
+            type: 'suggestion',
+            text: '📅 Consider reducing meetings to focus on deliverables.',
+            emoji: '💭'
+          });
+        }
+
+        return insights;
+      }
+    }
+
+    // ============================================
+    // GAMIFICATION ENGINE
+    // ============================================
+
+    class GamificationEngine {
+      static awardBadges(employee) {
+        const badges = [];
+        const score = PerformanceAI.calculatePerformanceScore(employee);
+
+        if (score > 90) badges.push({ name: 'superstar', icon: '⭐', label: 'Superstar' });
+        if (employee.streak > 14) badges.push({ name: 'flame', icon: '🔥', label: '14-Day Streak' });
+        if (employee.gitCommits > 50) badges.push({ name: 'coder', icon: '💻', label: 'Code Master' });
+        if (employee.tasksCompleted > 30) badges.push({ name: 'taskforce', icon: '✅', label: 'Task Force' });
+        if (employee.meetingsAttended > 20) badges.push({ name: 'connector', icon: '🤝', label: 'Team Connector' });
+
+        return badges;
+      }
+
+      static calculateLeaderboardPosition(employees) {
+        return employees
+          .map(emp => ({
+            ...emp,
+            score: PerformanceAI.calculatePerformanceScore(emp)
+          }))
+          .sort((a, b) => b.score - a.score)
+          .map((emp, idx) => ({
+            ...emp,
+            rank: idx + 1,
+            medal: idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : ''
+          }));
+      }
+    }
+
+    // ============================================
+    // CHATBOT ENGINE
+    // ============================================
+
+    class ChatbotEngine {
+      static generateResponse(query, employees, currentUser) {
+        const lowerQuery = query.toLowerCase();
+
+        if (lowerQuery.includes('performance') || lowerQuery.includes('how am i')) {
+          const user = employees.find(e => e.email === currentUser.email);
+          const score = PerformanceAI.calculatePerformanceScore(user);
+          return `📊 Your performance score: ${score}/100. You've completed ${user.tasksCompleted} tasks with ${user.gitCommits} commits. ${score > 80 ? '🌟 Excellent work!' : 'Keep pushing! 💪'}`;
+        }
+
+        if (lowerQuery.includes('top performer') || lowerQuery.includes('best')) {
+          const leaderboard = GamificationEngine.calculateLeaderboardPosition(employees);
+          const topEmp = leaderboard[0];
+          return `🏆 ${topEmp.name} is leading with ${topEmp.score} points! Great performance this month.`;
+        }
+
+        if (lowerQuery.includes('burnout') || lowerQuery.includes('stress')) {
+          const user = employees.find(e => e.email === currentUser.email);
+          const burnout = PerformanceAI.detectBurnout(user);
+          return `${burnout === 'high' ? '🔥 High burnout risk detected. Take a break!' : '✅ You\'re doing fine. Keep the balance! 😊'}`;
+        }
+
+        if (lowerQuery.includes('goal') || lowerQuery.includes('target')) {
+          return '🎯 Set a goal of 85+ performance score this month. Focus on consistent commits and task completion!';
+        }
+
+        return '🤖 I can help! Try asking about your performance, top performers, burnout risk, or goals.';
+      }
+
+      static generateHRResponse(query, employees, tasks = []) {
+        const lowerQuery = query.toLowerCase();
+
+        // === EMPLOYEE REMOVAL RECOMMENDATIONS ===
+        if (lowerQuery.includes('remove') || lowerQuery.includes('fire') || lowerQuery.includes('redundant') || lowerQuery.includes('underperforming')) {
+          const underperforming = employees.filter(e => {
+            const score = PerformanceAI.calculatePerformanceScore(e);
+            return score < 40;
+          });
+
+          if (underperforming.length === 0) {
+            return `✅ <strong>Good News!</strong><br>No severely underperforming employees detected. All employees are contributing to the team.`;
+          }
+
+          let analysis = `⚠️ <strong>Low Performance Employees (${underperforming.length}):</strong><br>`;
+          analysis += underperforming.map(e => {
+            const score = PerformanceAI.calculatePerformanceScore(e);
+            const burnout = PerformanceAI.detectBurnout(e);
+            return `• <strong>${e.name}</strong><br>&nbsp;&nbsp;Score: ${score}/100 | Tasks: ${e.tasksCompleted} | Commits: ${e.gitCommits}<br>&nbsp;&nbsp;Recommendation: Consider training, reassignment, or performance plan before removal`;
+          }).join('<br>');
+
+          analysis += `<br><br>💡 <strong>Suggestion:</strong> Before removing anyone, consider:<br>• Performance improvement plan (30-60 days)<br>• Role reassignment to better-suited position<br>• Training or mentoring program<br>• Check if workload is unrealistic`;
+
+          return analysis;
+        }
+
+        // === EMPLOYEE ADDITION RECOMMENDATIONS ===
+        if (lowerQuery.includes('add') || lowerQuery.includes('hire') || lowerQuery.includes('need') || lowerQuery.includes('shortage')) {
+          const depts = {};
+          employees.forEach(e => {
+            if (!depts[e.department]) depts[e.department] = { count: 0, totalWorkHours: 0, avgScore: 0, tasks: 0 };
+            depts[e.department].count++;
+            depts[e.department].totalWorkHours += e.workHours;
+            depts[e.department].avgScore += PerformanceAI.calculatePerformanceScore(e);
+            depts[e.department].tasks += tasks.filter(t => t.taskAssignedTo === e.email).length;
+          });
+
+          // Calculate metrics
+          const analysis = Object.entries(depts).map(([dept, data]) => {
+            data.avgScore = Math.round(data.avgScore / data.count);
+            const avgHoursPerEmp = Math.round(data.totalWorkHours / data.count);
+            const needsMoreStaff = avgHoursPerEmp > 45 || data.tasks > data.count * 5;
+
+            return {
+              dept,
+              count: data.count,
+              avgHours: avgHoursPerEmp,
+              avgScore: data.avgScore,
+              tasks: data.tasks,
+              needsStaff: needsMoreStaff
+            };
+          });
+
+          const understaffed = analysis.filter(d => d.needsStaff);
+
+          if (understaffed.length === 0) {
+            return `✅ <strong>Team Capacity Check:</strong><br>Your team has balanced workload distribution. No immediate hiring needed.`;
+          }
+
+          let recommendation = `🔴 <strong>Departments Needing Additional Staff:</strong><br>`;
+          recommendation += understaffed.map(d => {
+            const role = d.dept === 'Engineering' ? 'Backend/Frontend Developer' : d.dept === 'Product' ? 'Product Manager' : 'General Role';
+            return `• <strong>${d.dept}</strong> - Add 1-2 people<br>&nbsp;&nbsp;Current: ${d.count} employees | Avg hours: ${d.avgHours}h | Avg performance: ${d.avgScore}/100<br>&nbsp;&nbsp;Recommended role: ${role}`;
+          }).join('<br>');
+
+          recommendation += `<br><br>📊 <strong>Hiring Priority:</strong><br>1. Focus on departments with high workload (${understaffed.map(d => d.avgHours).sort((a,b) => b-a)[0]}+ hours)<br>2. Look for experienced hires to boost average performance<br>3. Consider contractors for short-term project needs`;
+
+          return recommendation;
+        }
+
+        // === TEAM COMPOSITION ANALYSIS ===
+        if (lowerQuery.includes('team composition') || lowerQuery.includes('ideal team') || lowerQuery.includes('team structure')) {
+          const depts = {};
+          employees.forEach(e => {
+            if (!depts[e.department]) depts[e.department] = [];
+            depts[e.department].push(e);
+          });
+
+          let analysis = `🏢 <strong>Current Team Composition:</strong><br>`;
+          analysis += Object.entries(depts).map(([dept, emps]) => {
+            const avgScore = Math.round(emps.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / emps.length);
+            const topPerformers = emps.filter(e => PerformanceAI.calculatePerformanceScore(e) > 80).length;
+            return `• ${dept}: ${emps.length} people (Top performers: ${topPerformers}, Avg score: ${avgScore}/100)`;
+          }).join('<br>');
+
+          analysis += `<br><br>💡 <strong>Ideal Team Composition:</strong><br>`;
+          analysis += `For ${employees.length} total employees:<br>`;
+          analysis += `• 20% Senior/Lead roles (mentors, architects)<br>`;
+          analysis += `• 50% Mid-level roles (core contributors)<br>`;
+          analysis += `• 30% Junior roles (growing talent)<br><br>`;
+          analysis += `🎯 <strong>Action Items:</strong><br>`;
+          analysis += `• Identify 2-3 potential leaders for mentoring<br>`;
+          analysis += `• Create clear career progression paths<br>`;
+          analysis += `• Balance workload across skill levels`;
+
+          return analysis;
+        }
+
+        // === WORKLOAD DISTRIBUTION ===
+        if (lowerQuery.includes('workload') || lowerQuery.includes('balance') || lowerQuery.includes('overload')) {
+          const workloadAnalysis = employees.map(e => ({
+            name: e.name,
+            hours: e.workHours,
+            tasks: tasks.filter(t => t.taskAssignedTo === e.email).length,
+            score: PerformanceAI.calculatePerformanceScore(e)
+          })).sort((a, b) => b.hours - a.hours);
+
+          const overloaded = workloadAnalysis.filter(e => e.hours > 50);
+          const underutilized = workloadAnalysis.filter(e => e.hours < 30);
+
+          let analysis = `⚙️ <strong>Workload Distribution Analysis:</strong><br>`;
+          
+          if (overloaded.length > 0) {
+            analysis += `🔴 <strong>Overloaded (${overloaded.length}):</strong><br>`;
+            analysis += overloaded.map(e => `• ${e.name}: ${e.hours}h/week, ${e.tasks} tasks (Score: ${e.score}/100)`).join('<br>');
+            analysis += `<br>`;
+          }
+
+          if (underutilized.length > 0) {
+            analysis += `🟢 <strong>Underutilized (${underutilized.length}):</strong><br>`;
+            analysis += underutilized.map(e => `• ${e.name}: ${e.hours}h/week, ${e.tasks} tasks (Score: ${e.score}/100)`).join('<br>');
+            analysis += `<br>`;
+          }
+
+          analysis += `📋 <strong>Rebalancing Recommendations:</strong><br>`;
+          if (overloaded.length > 0 && underutilized.length > 0) {
+            analysis += `• Redistribute ${Math.ceil((overloaded.reduce((a,e) => a+e.hours, 0) - overloaded.length * 40) / underutilized.length)}h from overloaded to underutilized<br>`;
+          }
+          analysis += `• Target workload: 40-45 hours/week per employee<br>`;
+          analysis += `• Review task priority and urgency<br>`;
+          analysis += `• Consider hiring if redistribution isn't possible`;
+
+          return analysis;
+        }
+
+        // === TOP PERFORMERS ===
+        if (lowerQuery.includes('top') && (lowerQuery.includes('performer') || lowerQuery.includes('employee'))) {
+          const leaderboard = GamificationEngine.calculateLeaderboardPosition(employees);
+          const top3 = leaderboard.slice(0, 3);
+          return `🏆 <strong>Top 3 Performers:</strong><br>${top3.map((emp, i) => `${i+1}. ${emp.name} - ${emp.score} points (${emp.department})`).join('<br>')}`;
+        }
+
+        // === BURNOUT RISK ===
+        if (lowerQuery.includes('burnout') || lowerQuery.includes('risk')) {
+          const atRisk = employees.filter(e => PerformanceAI.detectBurnout(e) === 'high');
+          if (atRisk.length === 0) return '✅ Good news! No employees with high burnout risk detected.';
+          
+          let analysis = `🔥 <strong>High Burnout Risk (${atRisk.length}):</strong><br>`;
+          analysis += atRisk.map(e => {
+            const score = PerformanceAI.calculatePerformanceScore(e);
+            return `• ${e.name} - ${e.workHours}h/week, Score: ${score}/100, Streak: ${e.streak} days<br>&nbsp;&nbsp;Action: Reduce workload immediately, offer support`;
+          }).join('<br>');
+          
+          return analysis;
+        }
+
+        // === TEAM PERFORMANCE TRENDS ===
+        if (lowerQuery.includes('trend') || lowerQuery.includes('performance') || lowerQuery.includes('progress')) {
+          const avgScore = Math.round(employees.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / employees.length);
+          const improving = employees.filter(e => e.streak > 7).length;
+          const declining = employees.filter(e => e.streak < 3).length;
+          const stable = employees.filter(e => e.streak >= 3 && e.streak <= 7).length;
+          
+          let analysis = `📈 <strong>Team Performance Trends:</strong><br>`;
+          analysis += `Average Score: ${avgScore}/100<br>`;
+          analysis += `🚀 Improving (7+ day streak): ${improving} employees<br>`;
+          analysis += `➡️ Stable (3-7 day streak): ${stable} employees<br>`;
+          analysis += `⚠️ Declining (<3 day streak): ${declining} employees<br><br>`;
+          
+          analysis += `💡 <strong>Overall Assessment:</strong><br>`;
+          const improvementRate = Math.round((improving / employees.length) * 100);
+          if (improvementRate > 60) {
+            analysis += `✅ Strong positive momentum! Team is performing well.`;
+          } else if (improvementRate > 40) {
+            analysis += `⚠️ Mixed performance. Need to support declining employees.`;
+          } else {
+            analysis += `🔴 Team is struggling. Review workload, provide support, and identify bottlenecks.`;
+          }
+          
+          return analysis;
+        }
+
+        // === AVERAGE METRICS ===
+        if (lowerQuery.includes('average') || lowerQuery.includes('avg')) {
+          const avgCommits = Math.round(employees.reduce((a, e) => a + e.gitCommits, 0) / employees.length);
+          const avgTasks = Math.round(employees.reduce((a, e) => a + e.tasksCompleted, 0) / employees.length);
+          const avgHours = Math.round(employees.reduce((a, e) => a + e.workHours, 0) / employees.length);
+          const avgScore = Math.round(employees.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / employees.length);
+          
+          return `📊 <strong>Team Averages:</strong><br>Commits: ${avgCommits}<br>Tasks: ${avgTasks}<br>Work Hours: ${avgHours}h<br>Performance Score: ${avgScore}/100`;
+        }
+
+        // === DEPARTMENT BREAKDOWN ===
+        if (lowerQuery.includes('department') || lowerQuery.includes('team')) {
+          const depts = {};
+          employees.forEach(e => {
+            if (!depts[e.department]) depts[e.department] = [];
+            depts[e.department].push(e);
+          });
+          const summary = Object.entries(depts).map(([dept, emps]) => {
+            const avgScore = Math.round(emps.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / emps.length);
+            return `${dept}: ${emps.length} employees (Avg Score: ${avgScore})`;
+          }).join('<br>');
+          return `🏢 <strong>Department Breakdown:</strong><br>${summary}`;
+        }
+
+        // === SPECIFIC EMPLOYEE QUERY ===
+        const nameQuery = query.match(/(?:about|for|is|on)\s+(\w+)/i)?.[1]?.toLowerCase();
+        if (nameQuery) {
+          const emp = employees.find(e => e.name.toLowerCase().includes(nameQuery));
+          if (emp) {
+            const score = PerformanceAI.calculatePerformanceScore(emp);
+            const burnout = PerformanceAI.detectBurnout(emp);
+            const insights = PerformanceAI.generateInsights(emp);
+            const empTasks = tasks.filter(t => t.taskAssignedTo === emp.email).length;
+            
+            return `👤 <strong>${emp.name}</strong><br>Score: ${score}/100<br>Department: ${emp.department}<br>Commits: ${emp.gitCommits} | Tasks: ${emp.tasksCompleted} | Assigned: ${empTasks}<br>Work Hours: ${emp.workHours}h | Burnout: ${burnout}<br>Streak: ${emp.streak} days<br><strong>Insights:</strong> ${insights.map(i => i.text).join(' | ')}`;
+          }
+        }
+
+        // === BEST DEPARTMENT ===
+        if (lowerQuery.includes('best department') || lowerQuery.includes('top department')) {
+          const depts = {};
+          employees.forEach(e => {
+            if (!depts[e.department]) depts[e.department] = [];
+            depts[e.department].push(e);
+          });
+          const deptScores = Object.entries(depts).map(([dept, emps]) => ({
+            dept,
+            score: Math.round(emps.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / emps.length)
+          })).sort((a, b) => b.score - a.score);
+          return `🥇 <strong>Best Performing Department:</strong> ${deptScores[0].dept} with ${deptScores[0].score}/100 average score`;
+        }
+
+        // === ACTIVITY STATUS ===
+        if (lowerQuery.includes('active') || lowerQuery.includes('inactive')) {
+          const active = employees.filter(e => {
+            const daysSince = Math.floor((Date.now() - new Date(e.lastActive)) / (1000 * 60 * 60 * 24));
+            return daysSince < 3;
+          });
+          return `👥 <strong>Activity Status:</strong><br>Active (last 3 days): ${active.length}<br>Inactive: ${employees.length - active.length}`;
+        }
+
+        return '💡 <strong>I can help with:</strong><br>• Employee removal/performance analysis<br>• Hiring recommendations & team gaps<br>• Team composition & structure<br>• Workload distribution & balance<br>• Burnout risk & performance trends<br>• Department analysis<br>• Specific employee details';
+      }
+    }
+
+    // ============================================
+    // STATE MANAGEMENT
+    // ============================================
+
+    const State = {
+      users: [],
+      employees: [],
+      tasks: [],
+      notifications: [],
+      feedback: [],
+      currentUser: null,
+      currentView: 'auth',
+
+      init() {
+        this.loadDefaultData();
+      },
+
+      loadDefaultData() {
+        // Default users
+        this.users = [
+          { id: '1', email: 'hr@intelliculture.com', password: 'hr123', name: 'Sarah HR', role: 'hr', createdAt: new Date().toISOString() },
+          { id: '2', email: 'alice@dev.com', password: 'emp123', name: 'Alice Kumar', role: 'employee', department: 'Engineering', createdAt: new Date().toISOString() },
+          { id: '3', email: 'bob@dev.com', password: 'emp123', name: 'Bob Chen', role: 'employee', department: 'Engineering', createdAt: new Date().toISOString() },
+          { id: '4', email: 'carol@dev.com', password: 'emp123', name: 'Carol Smith', role: 'employee', department: 'Product', createdAt: new Date().toISOString() }
+        ];
+
+        // Default employees with metrics
+        this.employees = [
+          { id: '2', email: 'alice@dev.com', name: 'Alice Kumar', role: 'employee', department: 'Engineering', gitCommits: 45, tasksCompleted: 28, meetingsAttended: 12, jiraTickets: 32, workHours: 38, lastActive: new Date(Date.now() - 1000*60*30).toISOString(), score: 85, streak: 8, badges: 'superstar,coder', burnoutRisk: 'low', createdAt: new Date().toISOString() },
+          { id: '3', email: 'bob@dev.com', name: 'Bob Chen', role: 'employee', department: 'Engineering', gitCommits: 28, tasksCompleted: 22, meetingsAttended: 18, jiraTickets: 20, workHours: 42, lastActive: new Date(Date.now() - 1000*60*120).toISOString(), score: 72, streak: 5, badges: '', burnoutRisk: 'medium', createdAt: new Date().toISOString() },
+          { id: '4', email: 'carol@dev.com', name: 'Carol Smith', role: 'employee', department: 'Product', gitCommits: 12, tasksCompleted: 35, meetingsAttended: 22, jiraTickets: 28, workHours: 52, lastActive: new Date(Date.now() - 1000*60*300).toISOString(), score: 78, streak: 3, badges: 'taskforce', burnoutRisk: 'high', createdAt: new Date().toISOString() }
+        ];
+
+        // Default tasks
+        this.tasks = [
+          { id: '1', taskTitle: 'Fix authentication bug', taskAssignedTo: 'alice@dev.com', taskPriority: 'high', taskStatus: 'in-progress', createdAt: new Date().toISOString() },
+          { id: '2', taskTitle: 'Design dashboard UI', taskAssignedTo: 'carol@dev.com', taskPriority: 'high', taskStatus: 'pending', createdAt: new Date().toISOString() },
+          { id: '3', taskTitle: 'API integration', taskAssignedTo: '', taskPriority: 'medium', taskStatus: 'pending', createdAt: new Date().toISOString() }
+        ];
+
+        // Default notifications
+        this.notifications = [
+          { id: '1', notificationMessage: 'New task assigned: Fix auth bug', notificationType: 'task', isRead: false, createdAt: new Date().toISOString() },
+          { id: '2', notificationMessage: 'Alice completed task: Review PR #234', notificationType: 'achievement', isRead: false, createdAt: new Date().toISOString() }
+        ];
+      },
+
+      login(email, password) {
+        const user = this.users.find(u => u.email === email && u.password === password);
+        if (user) {
+          this.currentUser = user;
+          this.currentView = user.role === 'hr' ? 'hr-dashboard' : 'employee-dashboard';
+          return true;
+        }
+        return false;
+      },
+
+      signup(email, password, name, role, department) {
+        if (this.users.find(u => u.email === email)) return false;
+
+        const newUser = {
+          id: String(this.users.length + 1),
+          email,
+          password,
+          name,
+          role,
+          department: department || 'General',
+          createdAt: new Date().toISOString()
+        };
+
+        this.users.push(newUser);
+
+        if (role === 'employee') {
+          this.employees.push({
+            id: newUser.id,
+            email,
+            name,
+            role: 'employee',
+            department,
+            gitCommits: 0,
+            tasksCompleted: 0,
+            meetingsAttended: 0,
+            jiraTickets: 0,
+            workHours: 0,
+            lastActive: new Date().toISOString(),
+            score: 0,
+            streak: 0,
+            badges: '',
+            burnoutRisk: 'low',
+            createdAt: new Date().toISOString()
+          });
+        }
+
+        return true;
+      }
+    };
+
+    // ============================================
+    // UI COMPONENTS
+    // ============================================
+
+    class UIManager {
+      static init() {
+        State.init();
+        this.render();
+      }
+
+      static render() {
+        const app = document.getElementById('app');
+        app.innerHTML = '';
+
+        if (State.currentView === 'auth') {
+          app.innerHTML = this.authPage();
+        } else if (State.currentView === 'signup') {
+          app.innerHTML = this.signupPage();
+        } else if (State.currentView === 'hr-dashboard') {
+          app.innerHTML = this.hrDashboard();
+        } else if (State.currentView === 'employee-dashboard') {
+          app.innerHTML = this.employeeDashboard();
+        }
+
+        this.attachEventListeners();
+        lucide.createIcons();
+      }
+
+      static authPage() {
+        return `
+          <div class="h-full w-full flex items-center justify-center p-4 overflow-auto">
+            <div class="w-full max-w-md">
+              <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">
+                  IntelliCulture
+                </h1>
+                <p class="text-gray-400">AI-Powered Employee Activity Tracker</p>
+              </div>
+
+              <div class="glass-card p-8 space-y-6">
+                <h2 class="text-xl font-bold">Login</h2>
+
+                <div>
+                  <label class="block text-sm mb-2">Email</label>
+                  <input id="login-email" type="email" placeholder="your@email.com" class="w-full">
+                </div>
+
+                <div>
+                  <label class="block text-sm mb-2">Password</label>
+                  <input id="login-password" type="password" placeholder="••••••••" class="w-full">
+                </div>
+
+                <button id="login-btn" class="btn-primary w-full">Sign In</button>
+
+                <div class="text-center">
+                  <p class="text-sm text-gray-400">
+                    Don't have an account?
+                    <button id="signup-toggle" class="text-blue-400 hover:text-blue-300 font-semibold">Sign Up</button>
+                  </p>
+                </div>
+
+                <div class="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4 text-xs text-gray-300">
+                  <p class="font-semibold mb-2">Demo Credentials:</p>
+                  <p>HR: hr@intelliculture.com / hr123</p>
+                  <p>Employee: alice@dev.com / emp123</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      static signupPage() {
+        return `
+          <div class="h-full w-full flex items-center justify-center p-4 overflow-auto">
+            <div class="w-full max-w-md">
+              <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-blue-400 mb-2">Create Account</h1>
+                <p class="text-gray-400">Join IntelliCulture</p>
+              </div>
+
+              <div class="glass-card p-8 space-y-6">
+                <div>
+                  <label class="block text-sm mb-2">Full Name</label>
+                  <input id="signup-name" type="text" placeholder="Your Name" class="w-full">
+                </div>
+
+                <div>
+                  <label class="block text-sm mb-2">Email</label>
+                  <input id="signup-email" type="email" placeholder="your@email.com" class="w-full">
+                </div>
+
+                <div>
+                  <label class="block text-sm mb-2">Password</label>
+                  <input id="signup-password" type="password" placeholder="••••••••" class="w-full">
+                </div>
+
+                <div>
+                  <label class="block text-sm mb-2">Role</label>
+                  <select id="signup-role" class="w-full">
+                    <option value="">Select Role</option>
+                    <option value="employee">Employee</option>
+                    <option value="hr">HR</option>
+                  </select>
+                </div>
+
+                <div id="department-field" style="display: none;">
+                  <label class="block text-sm mb-2">Department</label>
+                  <input id="signup-department" type="text" placeholder="e.g., Engineering" class="w-full">
+                </div>
+
+                <button id="signup-btn" class="btn-primary w-full">Create Account</button>
+
+                <div class="text-center">
+                  <button id="back-to-login" class="text-blue-400 hover:text-blue-300 font-semibold">Back to Login</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      static hrDashboard() {
+        const leaderboard = GamificationEngine.calculateLeaderboardPosition(State.employees);
+        const notifications = this.getHRNotifications();
+
+        return `
+          <div class="h-full w-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <!-- Header -->
+            <div class="bg-slate-800/50 border-b border-slate-700/50 p-6">
+              <div class="flex justify-between items-center max-w-7xl mx-auto">
+                <div>
+                  <h1 class="text-3xl font-bold text-blue-400">HR Dashboard</h1>
+                  <p class="text-gray-400 text-sm mt-1">Welcome, ${State.currentUser.name}</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <button id="hr-chat-btn" class="btn-secondary relative" title="Ask AI about employees">
+                    <i data-lucide="message-circle" style="width: 20px; height: 20px;"></i>
+                  </button>
+                  <div class="relative">
+                    <button id="notification-bell" class="btn-secondary relative">
+                      <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+                      ${notifications.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${notifications.length}</span>` : ''}
+                    </button>
+                    <div id="notification-panel" class="hidden absolute right-0 mt-2 w-96 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                      <div class="p-4 border-b border-slate-700">
+                        <h3 class="font-bold text-blue-400">Notifications</h3>
+                      </div>
+                      <div class="p-4 space-y-3">
+                        ${notifications.length > 0 ? notifications.map(notif => `
+                          <div class="p-3 rounded-lg ${notif.type === 'burnout' ? 'bg-red-900/20 border border-red-700/30' : notif.type === 'deadline' ? 'bg-yellow-900/20 border border-yellow-700/30' : 'bg-blue-900/20 border border-blue-700/30'} animate-slide">
+                            <div class="flex gap-2 items-start">
+                              <span class="text-xl">${notif.icon}</span>
+                              <div class="flex-1">
+                                <p class="font-semibold text-sm">${notif.title}</p>
+                                <p class="text-xs text-gray-300 mt-1">${notif.message}</p>
+                                <p class="text-xs text-gray-400 mt-2">${notif.time}</p>
+                              </div>
+                            </div>
+                          </div>
+                        `).join('') : '<p class="text-gray-400 text-sm">No notifications</p>'}
+                      </div>
+                    </div>
+                  </div>
+                  <button id="logout-btn" class="btn-secondary">Logout</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 overflow-auto p-6">
+              <div class="max-w-7xl mx-auto space-y-6">
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div class="stat-box">
+                    <i data-lucide="users" style="width: 24px; height: 24px; margin: 0 auto; color: #60a5fa;"></i>
+                    <div class="value">${State.employees.length}</div>
+                    <div class="label">Total Employees</div>
+                  </div>
+                  <div class="stat-box">
+                    <i data-lucide="trending-up" style="width: 24px; height: 24px; margin: 0 auto; color: #4ade80;"></i>
+                    <div class="value">${Math.round(State.employees.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / State.employees.length)}</div>
+                    <div class="label">Avg Performance</div>
+                  </div>
+                  <div class="stat-box">
+                    <i data-lucide="alert-circle" style="width: 24px; height: 24px; margin: 0 auto; color: #fb923c;"></i>
+                    <div class="value">${State.employees.filter(e => PerformanceAI.detectBurnout(e) === 'high').length}</div>
+                    <div class="label">Burnout Risk</div>
+                  </div>
+                  <div class="stat-box">
+                    <i data-lucide="tasks" style="width: 24px; height: 24px; margin: 0 auto; color: #a78bfa;"></i>
+                    <div class="value">${State.tasks.filter(t => t.taskStatus === 'in-progress').length}</div>
+                    <div class="label">In Progress</div>
+                  </div>
+                </div>
+
+                <!-- Leaderboard -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="trophy" style="width: 20px; height: 20px; color: #fbbf24;"></i>
+                    Performance Leaderboard
+                  </h2>
+                  <div class="space-y-3">
+                    ${leaderboard.slice(0, 5).map((emp, idx) => `
+                      <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition">
+                        <div class="flex items-center gap-3">
+                          <span class="text-xl font-bold">${emp.medal || '#' + emp.rank}</span>
+                          <div>
+                            <p class="font-semibold">${emp.name}</p>
+                            <p class="text-xs text-gray-400">${emp.department}</p>
+                          </div>
+                        </div>
+                        <div class="text-right">
+                          <p class="font-bold text-blue-400">${emp.score} pts</p>
+                          <p class="text-xs text-gray-400">Score</p>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Employee Activity List -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="activity" style="width: 20px; height: 20px; color: #60a5fa;"></i>
+                    Employee Activity
+                  </h2>
+                  <div class="space-y-3">
+                    ${State.employees.map(emp => {
+                      const burnout = PerformanceAI.detectBurnout(emp);
+                      const score = PerformanceAI.calculatePerformanceScore(emp);
+                      const burnoutColor = burnout === 'high' ? 'badge-danger' : burnout === 'medium' ? 'badge-warning' : 'badge-success';
+                      return `
+                        <div class="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition cursor-pointer employee-row" data-email="${emp.email}">
+                          <div class="flex-1">
+                            <p class="font-semibold">${emp.name}</p>
+                            <p class="text-xs text-gray-400">${emp.email}</p>
+                            <div class="flex gap-2 mt-2">
+                              <span class="text-xs text-gray-300">📊 ${score}/100</span>
+                              <span class="text-xs text-gray-300">🔥 ${emp.streak} day streak</span>
+                              <span class="text-xs text-gray-300">💻 ${emp.gitCommits} commits</span>
+                            </div>
+                          </div>
+                          <span class="badge ${burnoutColor}" style="margin-left: 10px;">
+                            ${burnout === 'high' ? '⚠️ High Risk' : burnout === 'medium' ? '⏰ Medium' : '✅ Healthy'}
+                          </span>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4">Quick Actions</h2>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button id="assign-task-btn" class="btn-primary w-full flex items-center justify-center gap-2">
+                      <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                      Assign Task
+                    </button>
+                    <button id="export-report-btn" class="btn-primary w-full flex items-center justify-center gap-2">
+                      <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+                      Export Report
+                    </button>
+                    <button id="view-feedback-btn" class="btn-primary w-full flex items-center justify-center gap-2">
+                      <i data-lucide="message-circle" style="width: 18px; height: 18px;"></i>
+                      Anonymous Feedback
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Modals -->
+            <div id="employee-detail-modal" style="display: none;" class="modal-overlay">
+              <div class="modal-content" id="employee-detail-content"></div>
+            </div>
+
+            <div id="hr-chat-modal" style="display: none;" class="modal-overlay">
+              <div class="modal-content" style="max-width: 600px; max-height: 80vh; display: flex; flex-direction: column;">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                  <i data-lucide="message-circle" style="width: 20px; height: 20px; color: #60a5fa;"></i>
+                  HR Intelligence Chat
+                </h2>
+                <p class="text-xs text-gray-400 mb-4">Ask me anything about your employees, performance, workload, or team insights.</p>
+                
+                <div id="hr-chat-history" class="flex-1 space-y-3 mb-4 overflow-y-auto" style="min-height: 300px;">
+                  <!-- Chat messages will appear here -->
+                </div>
+
+                <div class="space-y-3">
+                  <div class="flex gap-2">
+                    <input id="hr-chat-input" type="text" placeholder="Ask about employees, burnout, performance..." class="flex-1" style="font-size: 14px;">
+                    <button id="hr-chat-send-btn" class="btn-primary">Send</button>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-2">
+                    <button class="hr-quick-query text-xs btn-secondary" data-query="Who are the top 3 performers?">
+                      <i data-lucide="star" style="width: 14px; height: 14px; margin-right: 4px; display: inline;"></i> Top Performers
+                    </button>
+                    <button class="hr-quick-query text-xs btn-secondary" data-query="Show me employees with burnout risk">
+                      <i data-lucide="alert-circle" style="width: 14px; height: 14px; margin-right: 4px; display: inline;"></i> Burnout Risk
+                    </button>
+                    <button class="hr-quick-query text-xs btn-secondary" data-query="Which employees have high workload?">
+                      <i data-lucide="trending-up" style="width: 14px; height: 14px; margin-right: 4px; display: inline;"></i> High Workload
+                    </button>
+                    <button class="hr-quick-query text-xs btn-secondary" data-query="Show team performance trends">
+                      <i data-lucide="line-chart" style="width: 14px; height: 14px; margin-right: 4px; display: inline;"></i> Trends
+                    </button>
+                  </div>
+                </div>
+
+                <button id="close-hr-chat-modal" class="btn-secondary w-full mt-4">Close</button>
+              </div>
+            </div>
+
+            <div id="task-assign-modal" style="display: none;" class="modal-overlay">
+              <div class="modal-content">
+                <h2 class="text-xl font-bold mb-4">Assign Task</h2>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm mb-2">Task Title</label>
+                    <input id="task-title" type="text" placeholder="e.g., Fix login bug" class="w-full">
+                  </div>
+                  <div>
+                    <label class="block text-sm mb-2">Priority</label>
+                    <select id="task-priority" class="w-full">
+                      <option value="low">Low</option>
+                      <option value="medium" selected>Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </div>
+
+                  <div class="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-3">
+                      <p class="text-sm font-semibold text-blue-400">🤖 AI Smart Assignment</p>
+                      <button id="auto-assign-btn" class="btn-primary text-sm py-2 px-4">Auto Assign</button>
+                    </div>
+                    <div id="ai-suggestion" class="hidden space-y-3">
+                      <div class="p-3 rounded bg-slate-900/50 border border-green-700/30">
+                        <p class="text-xs text-gray-400 mb-1">Recommended For:</p>
+                        <p class="font-semibold text-green-400" id="suggested-employee"></p>
+                        <p class="text-xs text-gray-300 mt-2" id="suggested-reason"></p>
+                        <div class="flex gap-2 mt-3">
+                          <button id="accept-suggestion-btn" class="btn-primary text-xs py-1 px-3 flex-1">Accept ✓</button>
+                          <button id="reject-suggestion-btn" class="btn-secondary text-xs py-1 px-3 flex-1">Reject</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="manual-assign-section">
+                    <label class="block text-sm mb-2">Or Assign Manually</label>
+                    <select id="task-assign-to" class="w-full">
+                      <option value="">Select Employee</option>
+                      ${State.employees.map(e => `<option value="${e.email}">${e.name}</option>`).join('')}
+                    </select>
+                  </div>
+
+                  <button id="create-task-btn" class="btn-primary w-full">Create Task</button>
+                </div>
+                <button id="close-task-modal" class="btn-secondary w-full mt-4">Close</button>
+              </div>
+            </div>
+
+            <div id="feedback-modal" style="display: none;" class="modal-overlay">
+              <div class="modal-content">
+                <h2 class="text-xl font-bold mb-4">Anonymous Feedback</h2>
+                <div id="feedback-list" class="space-y-4 max-h-96 overflow-y-auto">
+                  <!-- Feedback items will be added here -->
+                </div>
+                <button id="close-feedback-modal" class="btn-secondary w-full mt-4">Close</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      static employeeDashboard() {
+        const employee = State.employees.find(e => e.email === State.currentUser.email);
+        const score = PerformanceAI.calculatePerformanceScore(employee);
+        const burnout = PerformanceAI.detectBurnout(employee);
+        const trend = PerformanceAI.generateTrendAnalysis(employee);
+        const insights = PerformanceAI.generateInsights(employee);
+        const badges = GamificationEngine.awardBadges(employee);
+        const notifications = this.getEmployeeNotifications(employee);
+
+        return `
+          <div class="h-full w-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+            <!-- Header -->
+            <div class="bg-slate-800/50 border-b border-slate-700/50 p-6">
+              <div class="flex justify-between items-center max-w-7xl mx-auto">
+                <div>
+                  <h1 class="text-3xl font-bold text-blue-400">My Dashboard</h1>
+                  <p class="text-gray-400 text-sm mt-1">Welcome, ${employee.name}</p>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="relative">
+                    <button id="notification-bell" class="btn-secondary relative">
+                      <i data-lucide="bell" style="width: 20px; height: 20px;"></i>
+                      ${notifications.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${notifications.length}</span>` : ''}
+                    </button>
+                    <div id="notification-panel" class="hidden absolute right-0 mt-2 w-96 bg-slate-800 border border-slate-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                      <div class="p-4 border-b border-slate-700">
+                        <h3 class="font-bold text-blue-400">Notifications</h3>
+                      </div>
+                      <div class="p-4 space-y-3">
+                        ${notifications.length > 0 ? notifications.map(notif => `
+                          <div class="p-3 rounded-lg ${notif.type === 'burnout' ? 'bg-red-900/20 border border-red-700/30' : notif.type === 'deadline' ? 'bg-yellow-900/20 border border-yellow-700/30' : 'bg-blue-900/20 border border-blue-700/30'} animate-slide">
+                            <div class="flex gap-2 items-start">
+                              <span class="text-xl">${notif.icon}</span>
+                              <div class="flex-1">
+                                <p class="font-semibold text-sm">${notif.title}</p>
+                                <p class="text-xs text-gray-300 mt-1">${notif.message}</p>
+                                <p class="text-xs text-gray-400 mt-2">${notif.time}</p>
+                              </div>
+                            </div>
+                          </div>
+                        `).join('') : '<p class="text-gray-400 text-sm">No notifications</p>'}
+                      </div>
+                    </div>
+                  </div>
+                  <button id="logout-btn" class="btn-secondary">Logout</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 overflow-auto p-6">
+              <div class="max-w-7xl mx-auto space-y-6">
+                <!-- Performance Score -->
+                <div class="glass-card p-6">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h2 class="text-2xl font-bold mb-2">Performance Score</h2>
+                      <p class="text-gray-400 text-sm">Track your contribution metrics</p>
+                    </div>
+                    <div class="text-center">
+                      <div class="relative w-32 h-32">
+                        <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                          <circle cx="60" cy="60" r="55" fill="none" stroke="rgba(148, 163, 184, 0.1)" stroke-width="10"/>
+                          <circle cx="60" cy="60" r="55" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="${score * 3.45} 345" stroke-linecap="round"/>
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                          <div class="text-center">
+                            <p class="text-3xl font-bold text-blue-400">${score}</p>
+                            <p class="text-xs text-gray-400">/100</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div class="stat-box">
+                    <i data-lucide="git-commit" style="width: 24px; height: 24px; margin: 0 auto; color: #60a5fa;"></i>
+                    <div class="value">${employee.gitCommits}</div>
+                    <div class="label">Git Commits</div>
+                  </div>
+                  <div class="stat-box">
+                    <i data-lucide="check-circle" style="width: 24px; height: 24px; margin: 0 auto; color: #4ade80;"></i>
+                    <div class="value">${employee.tasksCompleted}</div>
+                    <div class="label">Tasks Completed</div>
+                  </div>
+                  <div class="stat-box">
+                    <i data-lucide="calendar" style="width: 24px; height: 24px; margin: 0 auto; color: #a78bfa;"></i>
+                    <div class="value">${employee.meetingsAttended}</div>
+                    <div class="label">Meetings</div>
+                  </div>
+                  <div class="stat-box">
+                    <i data-lucide="zap" style="width: 24px; height: 24px; margin: 0 auto; color: #fbbf24;"></i>
+                    <div class="value">${employee.workHours}h</div>
+                    <div class="label">Work Hours</div>
+                  </div>
+                </div>
+
+                <!-- Streak & Badges -->
+                <div class="glass-card p-6">
+                  <div class="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 class="text-xl font-bold flex items-center gap-2 mb-2">
+                        <i data-lucide="flame" style="width: 20px; height: 20px; color: #ff6b6b;"></i>
+                        Current Streak
+                      </h2>
+                      <p class="text-3xl font-bold text-orange-400">${employee.streak} days</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-sm text-gray-400 mb-2">Your Badges</p>
+                      <div class="flex gap-2 flex-wrap justify-end">
+                        ${badges.length > 0 ? badges.map(b => `<span class="text-2xl" title="${b.label}">${b.icon}</span>`).join('') : '<span class="text-gray-400 text-sm">No badges yet. Keep performing! 🚀</span>'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Burnout Status & Insights -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4">Health & Insights</h2>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p class="text-sm text-gray-400 mb-2">Burnout Risk</p>
+                      <span class="badge ${burnout === 'high' ? 'badge-danger' : burnout === 'medium' ? 'badge-warning' : 'badge-success'}">
+                        ${burnout === 'high' ? '🔥 High Risk' : burnout === 'medium' ? '⏰ Medium' : '✅ Healthy'}
+                      </span>
+                    </div>
+                    <div>
+                      <p class="text-sm text-gray-400 mb-2">Performance Trend</p>
+                      <span class="badge">
+                        ${trend.trajectory === 'upward' ? '📈' : trend.trajectory === 'stable' ? '➡️' : '📉'} ${trend.trajectory}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="mt-4 space-y-2">
+                    ${insights.map(insight => `
+                      <p class="text-sm p-3 rounded bg-slate-900/50 flex items-start gap-2">
+                        <span class="text-lg">${insight.emoji}</span>
+                        <span>${insight.text}</span>
+                      </p>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- AI Chatbot -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i data-lucide="message-circle" style="width: 20px; height: 20px; color: #60a5fa;"></i>
+                    AI Assistant
+                  </h2>
+                  <div id="chat-history" class="space-y-3 mb-4 max-h-48 overflow-y-auto">
+                    <!-- Chat messages will appear here -->
+                  </div>
+                  <div class="flex gap-2">
+                    <input id="chat-input" type="text" placeholder="Ask me anything..." class="flex-1">
+                    <button id="chat-send-btn" class="btn-primary">Send</button>
+                  </div>
+                </div>
+
+                <!-- Tasks Assigned -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4">My Tasks</h2>
+                  <div class="space-y-3">
+                    ${State.tasks.filter(t => t.taskAssignedTo === employee.email).map(task => `
+                      <div class="p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition border-l-4 ${task.taskPriority === 'high' ? 'border-red-500' : task.taskPriority === 'medium' ? 'border-yellow-500' : 'border-green-500'}">
+                        <p class="font-semibold">${task.taskTitle}</p>
+                        <div class="flex justify-between items-center mt-2">
+                          <span class="badge ${task.taskPriority === 'high' ? 'badge-danger' : task.taskPriority === 'medium' ? 'badge-warning' : 'badge-success'}">${task.taskPriority}</span>
+                          <span class="badge">${task.taskStatus}</span>
+                        </div>
+                      </div>
+                    `).join('')}
+                    ${State.tasks.filter(t => t.taskAssignedTo === employee.email).length === 0 ? '<p class="text-gray-400 text-sm">No tasks assigned yet</p>' : ''}
+                  </div>
+                </div>
+
+                <!-- Feedback Section -->
+                <div class="glass-card p-6">
+                  <h2 class="text-xl font-bold mb-4">Share Feedback</h2>
+                  <div class="space-y-3">
+                    <textarea id="feedback-text" placeholder="Share your feedback anonymously..." class="w-full" rows="4"></textarea>
+                    <div class="flex items-center gap-2">
+                      <input id="feedback-anonymous" type="checkbox" checked>
+                      <label for="feedback-anonymous" class="text-sm">Post Anonymously</label>
+                    </div>
+                    <button id="submit-feedback-btn" class="btn-primary w-full">Submit Feedback</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      static showEmployeeDetail(email) {
+        const employee = State.employees.find(e => e.email === email);
+        const score = PerformanceAI.calculatePerformanceScore(employee);
+        const burnout = PerformanceAI.detectBurnout(employee);
+        const trend = PerformanceAI.generateTrendAnalysis(employee);
+        const insights = PerformanceAI.generateInsights(employee);
+        const badges = GamificationEngine.awardBadges(employee);
+
+        const modal = document.getElementById('employee-detail-modal');
+        const content = document.getElementById('employee-detail-content');
+
+        content.innerHTML = `
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">${employee.name}</h2>
+            <button id="close-employee-modal" class="text-2xl cursor-pointer">×</button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <p class="text-gray-400 text-sm">Email</p>
+              <p class="font-semibold">${employee.email}</p>
+            </div>
+
+            <div>
+              <p class="text-gray-400 text-sm">Performance Score</p>
+              <p class="text-2xl font-bold text-blue-400">${score}/100</p>
+            </div>
+
+            <div>
+              <p class="text-gray-400 text-sm mb-2">Metrics</p>
+              <div class="space-y-1 text-sm">
+                <p>📊 Git Commits: ${employee.gitCommits}</p>
+                <p>✅ Tasks Completed: ${employee.tasksCompleted}</p>
+                <p>📅 Meetings: ${employee.meetingsAttended}</p>
+                <p>🔧 Jira Tickets: ${employee.jiraTickets}</p>
+                <p>⏱️ Work Hours: ${employee.workHours}h</p>
+              </div>
+            </div>
+
+            <div>
+              <p class="text-gray-400 text-sm mb-2">Status</p>
+              <div class="space-y-2">
+                <div>
+                  <span class="badge ${burnout === 'high' ? 'badge-danger' : burnout === 'medium' ? 'badge-warning' : 'badge-success'}">
+                    ${burnout === 'high' ? '🔥 Burnout Risk' : burnout === 'medium' ? '⏰ Medium' : '✅ Healthy'}
+                  </span>
+                </div>
+                <div>
+                  <span class="badge">🔥 ${employee.streak} day streak</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p class="text-gray-400 text-sm mb-2">Badges</p>
+              <div class="flex gap-2">
+                ${badges.map(b => `<span class="text-2xl" title="${b.label}">${b.icon}</span>`).join('') || '<p class="text-sm text-gray-400">No badges yet</p>'}
+              </div>
+            </div>
+
+            <div>
+              <p class="text-gray-400 text-sm mb-2">Insights</p>
+              <div class="space-y-2">
+                ${insights.map(i => `<p class="text-sm p-2 bg-slate-900/50 rounded">${i.emoji} ${i.text}</p>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <button id="close-employee-modal" class="btn-secondary w-full mt-6">Close</button>
+        `;
+
+        modal.style.display = 'flex';
+
+        document.getElementById('close-employee-modal').addEventListener('click', () => {
+          modal.style.display = 'none';
+        });
+      }
+
+      static attachEventListeners() {
+        // Auth page
+        document.getElementById('login-btn')?.addEventListener('click', (e) => {
+          e.preventDefault();
+          const email = document.getElementById('login-email')?.value || '';
+          const password = document.getElementById('login-password')?.value || '';
+
+          console.log('Login attempt:', email, password);
+
+          if (!email || !password) {
+            alert('Please enter email and password');
+            return;
+          }
+
+          if (State.login(email, password)) {
+            this.render();
+          } else {
+            alert('Invalid credentials. Try hr@intelliculture.com / hr123');
+          }
+        });
+
+        document.getElementById('signup-toggle')?.addEventListener('click', () => {
+          State.currentView = 'signup';
+          this.render();
+        });
+
+        // Signup
+        document.getElementById('signup-role')?.addEventListener('change', (e) => {
+          const dept = document.getElementById('department-field');
+          if (e.target.value === 'employee') {
+            dept.style.display = 'block';
+          } else {
+            dept.style.display = 'none';
+          }
+        });
+
+        document.getElementById('signup-btn')?.addEventListener('click', () => {
+          const name = document.getElementById('signup-name').value;
+          const email = document.getElementById('signup-email').value;
+          const password = document.getElementById('signup-password').value;
+          const role = document.getElementById('signup-role').value;
+          const department = document.getElementById('signup-department')?.value || 'General';
+
+          if (name && email && password && role) {
+            if (State.signup(email, password, name, role, department)) {
+              alert('Account created! Please login.');
+              State.currentView = 'auth';
+              this.render();
+            } else {
+              alert('Email already exists');
+            }
+          } else {
+            alert('Please fill all fields');
+          }
+        });
+
+        document.getElementById('back-to-login')?.addEventListener('click', () => {
+          State.currentView = 'auth';
+          this.render();
+        });
+
+        // Logout
+        document.getElementById('logout-btn')?.addEventListener('click', () => {
+          State.currentUser = null;
+          State.currentView = 'auth';
+          this.render();
+        });
+
+        // HR Dashboard - Employee detail
+        document.querySelectorAll('.employee-row').forEach(row => {
+          row.addEventListener('click', () => {
+            this.showEmployeeDetail(row.dataset.email);
+          });
+        });
+
+        // HR Dashboard - Task assignment
+        document.getElementById('assign-task-btn')?.addEventListener('click', () => {
+          document.getElementById('task-assign-modal').style.display = 'flex';
+          document.getElementById('ai-suggestion').classList.add('hidden');
+          document.getElementById('task-title').value = '';
+          document.getElementById('task-priority').value = 'medium';
+          document.getElementById('task-assign-to').value = '';
+        });
+
+        document.getElementById('close-task-modal')?.addEventListener('click', () => {
+          document.getElementById('task-assign-modal').style.display = 'none';
+        });
+
+        document.getElementById('auto-assign-btn')?.addEventListener('click', () => {
+          const taskTitle = document.getElementById('task-title').value;
+          const taskPriority = document.getElementById('task-priority').value;
+
+          if (!taskTitle.trim()) {
+            alert('Please enter a task title first');
+            return;
+          }
+
+          // Get AI suggestion
+          const suggestion = PerformanceAI.findBestEmployee(taskTitle, taskPriority, State.employees);
+
+          if (suggestion) {
+            // Show suggestion
+            document.getElementById('suggested-employee').textContent = suggestion.employee.name;
+            document.getElementById('suggested-reason').textContent = suggestion.reason;
+            document.getElementById('ai-suggestion').classList.remove('hidden');
+            document.getElementById('task-assign-to').value = suggestion.employee.email;
+
+            // Store current suggestion
+            window.currentSuggestion = suggestion.employee.email;
+          } else {
+            alert('No suitable employee found. All employees are at maximum capacity or have high burnout risk.');
+          }
+        });
+
+        document.getElementById('accept-suggestion-btn')?.addEventListener('click', () => {
+          document.getElementById('task-assign-to').value = window.currentSuggestion;
+          // Trigger create task immediately after accepting
+          document.getElementById('create-task-btn').click();
+        });
+
+        document.getElementById('reject-suggestion-btn')?.addEventListener('click', () => {
+          document.getElementById('ai-suggestion').classList.add('hidden');
+          document.getElementById('task-assign-to').value = '';
+          window.currentSuggestion = null;
+        });
+
+        document.getElementById('create-task-btn')?.addEventListener('click', () => {
+          const title = document.getElementById('task-title').value;
+          const assignTo = document.getElementById('task-assign-to').value;
+          const priority = document.getElementById('task-priority').value;
+
+          if (title && assignTo) {
+            State.tasks.push({
+              id: String(State.tasks.length + 1),
+              taskTitle: title,
+              taskAssignedTo: assignTo,
+              taskPriority: priority,
+              taskStatus: 'pending',
+              createdAt: new Date().toISOString()
+            });
+
+            State.notifications.push({
+              id: String(State.notifications.length + 1),
+              notificationMessage: `New task assigned: ${title}`,
+              notificationType: 'task',
+              isRead: false,
+              createdAt: new Date().toISOString()
+            });
+
+            document.getElementById('task-assign-modal').style.display = 'none';
+            this.render();
+          } else {
+            alert('Please select an employee');
+          }
+        });
+
+        // HR Dashboard - Feedback view
+        document.getElementById('view-feedback-btn')?.addEventListener('click', () => {
+          const feedbackList = document.getElementById('feedback-list');
+          feedbackList.innerHTML = State.feedback.map(f => `
+            <div class="p-3 rounded bg-slate-900/50 border border-slate-700">
+              <p class="text-sm mb-1">${f.feedbackAnonymous ? '🔒 Anonymous' : f.email}</p>
+              <p class="text-sm text-gray-300">${f.feedbackText}</p>
+            </div>
+          `).join('') || '<p class="text-gray-400 text-sm">No feedback yet</p>';
+
+          document.getElementById('feedback-modal').style.display = 'flex';
+        });
+
+        document.getElementById('close-feedback-modal')?.addEventListener('click', () => {
+          document.getElementById('feedback-modal').style.display = 'none';
+        });
+
+        // HR Dashboard - Export report
+        document.getElementById('export-report-btn')?.addEventListener('click', () => {
+          this.exportReport();
+        });
+
+        // HR Dashboard - Chat
+        document.getElementById('hr-chat-btn')?.addEventListener('click', () => {
+          document.getElementById('hr-chat-modal').style.display = 'flex';
+          document.getElementById('hr-chat-input').focus();
+        });
+
+        document.getElementById('close-hr-chat-modal')?.addEventListener('click', () => {
+          document.getElementById('hr-chat-modal').style.display = 'none';
+        });
+
+        document.getElementById('hr-chat-send-btn')?.addEventListener('click', () => {
+          const input = document.getElementById('hr-chat-input');
+          const query = input.value;
+
+          if (query.trim()) {
+            const chatHistory = document.getElementById('hr-chat-history');
+            const response = ChatbotEngine.generateHRResponse(query, State.employees, State.tasks);
+
+            chatHistory.innerHTML += `
+              <div class="text-right animate-slide">
+                <p class="text-sm bg-blue-900/30 p-2 rounded inline-block max-w-xs text-left">${query}</p>
+              </div>
+              <div class="animate-slide">
+                <p class="text-sm bg-slate-900/50 p-3 rounded inline-block max-w-xs" style="text-align: left;">${response}</p>
+              </div>
+            `;
+
+            input.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+          }
+        });
+
+        document.getElementById('hr-chat-input')?.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') {
+            document.getElementById('hr-chat-send-btn').click();
+          }
+        });
+
+        document.querySelectorAll('.hr-quick-query').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const query = btn.dataset.query;
+            document.getElementById('hr-chat-input').value = query;
+            document.getElementById('hr-chat-send-btn').click();
+          });
+        });
+
+        // Employee Dashboard - Chat
+        document.getElementById('chat-send-btn')?.addEventListener('click', () => {
+          const input = document.getElementById('chat-input');
+          const query = input.value;
+
+          if (query.trim()) {
+            const chatHistory = document.getElementById('chat-history');
+            const response = ChatbotEngine.generateResponse(query, State.employees, State.currentUser);
+
+            chatHistory.innerHTML += `
+              <div class="text-right">
+                <p class="text-sm bg-blue-900/30 p-2 rounded inline-block max-w-xs text-left">${query}</p>
+              </div>
+              <div>
+                <p class="text-sm bg-slate-900/50 p-2 rounded inline-block max-w-xs">${response}</p>
+              </div>
+            `;
+
+            input.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+          }
+        });
+
+        // Employee Dashboard - Feedback
+        document.getElementById('submit-feedback-btn')?.addEventListener('click', () => {
+          const text = document.getElementById('feedback-text').value;
+          const anonymous = document.getElementById('feedback-anonymous').checked;
+
+          if (text.trim()) {
+            State.feedback.push({
+              id: String(State.feedback.length + 1),
+              feedbackText: text,
+              feedbackAnonymous: anonymous,
+              email: State.currentUser.email,
+              createdAt: new Date().toISOString()
+            });
+
+            document.getElementById('feedback-text').value = '';
+            alert('Thank you for your feedback!');
+          }
+        });
+
+        // Modal close on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              modal.style.display = 'none';
+            }
+          });
+        });
+
+        // Notification bell toggle
+        const notifBell = document.getElementById('notification-bell');
+        const notifPanel = document.getElementById('notification-panel');
+
+        if (notifBell && notifPanel) {
+          notifBell.addEventListener('click', (e) => {
+            e.stopPropagation();
+            notifPanel.classList.toggle('hidden');
+          });
+
+          document.addEventListener('click', (e) => {
+            if (!notifBell.contains(e.target) && !notifPanel.contains(e.target)) {
+              notifPanel.classList.add('hidden');
+            }
+          });
+        }
+      }
+
+      static exportReport() {
+        const leaderboard = GamificationEngine.calculateLeaderboardPosition(State.employees);
+        let csv = 'Rank,Name,Department,Performance Score,Git Commits,Tasks,Meetings,Work Hours,Burnout Risk,Streak\n';
+
+        leaderboard.forEach(emp => {
+          const burnout = PerformanceAI.detectBurnout(emp);
+          csv += `${emp.rank},${emp.name},${emp.department},${emp.score},${emp.gitCommits},${emp.tasksCompleted},${emp.meetingsAttended},${emp.workHours},${burnout},${emp.streak}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `intelliculture-report-${new Date().toISOString().split('T')[0]}.csv`;
+        a.click();
+      }
+
+      static getHRNotifications() {
+        const notifications = [];
+        const now = new Date();
+
+        // Burnout risk notifications
+        State.employees.forEach(emp => {
+          const burnout = PerformanceAI.detectBurnout(emp);
+          if (burnout === 'high') {
+            notifications.push({
+              type: 'burnout',
+              icon: '🔥',
+              title: `High Burnout Risk - ${emp.name}`,
+              message: `${emp.name} shows signs of high burnout risk. Consider workload adjustment.`,
+              time: 'Now',
+              priority: 1
+            });
+          } else if (burnout === 'medium') {
+            notifications.push({
+              type: 'burnout',
+              icon: '⏰',
+              title: `Medium Burnout Risk - ${emp.name}`,
+              message: `${emp.name} is showing moderate stress. Monitor closely.`,
+              time: '5 min ago',
+              priority: 2
+            });
+          }
+        });
+
+        // Deadline notifications
+        const urgentTasks = State.tasks.filter(t => t.taskStatus === 'pending' || t.taskStatus === 'in-progress');
+        if (urgentTasks.length > 2) {
+          notifications.push({
+            type: 'deadline',
+            icon: '⏰',
+            title: `${urgentTasks.length} Pending Tasks`,
+            message: `There are ${urgentTasks.length} tasks pending. Review assignments.`,
+            time: '15 min ago',
+            priority: 2
+          });
+        }
+
+        // Performance milestone
+        const topPerformers = State.employees.filter(e => PerformanceAI.calculatePerformanceScore(e) > 85);
+        if (topPerformers.length > 0) {
+          notifications.push({
+            type: 'achievement',
+            icon: '⭐',
+            title: `${topPerformers.length} Top Performers`,
+            message: `You have ${topPerformers.length} employees performing excellently this month!`,
+            time: '30 min ago',
+            priority: 3
+          });
+        }
+
+        return notifications.sort((a, b) => a.priority - b.priority);
+      }
+
+      static getEmployeeNotifications(employee) {
+        const notifications = [];
+
+        // Burnout warning
+        const burnout = PerformanceAI.detectBurnout(employee);
+        if (burnout === 'high') {
+          notifications.push({
+            type: 'burnout',
+            icon: '🔥',
+            title: 'High Burnout Risk',
+            message: 'You\'re working too hard! Consider taking a break. Your well-being matters.',
+            time: 'Now',
+            priority: 1
+          });
+        } else if (burnout === 'medium') {
+          notifications.push({
+            type: 'burnout',
+            icon: '⏰',
+            title: 'Moderate Stress Detected',
+            message: 'Your workload is increasing. Remember to take breaks.',
+            time: '10 min ago',
+            priority: 1
+          });
+        }
+
+        // Task deadline reminders
+        const assignedTasks = State.tasks.filter(t => t.taskAssignedTo === employee.email);
+        const pendingTasks = assignedTasks.filter(t => t.taskStatus === 'pending');
+        
+        if (pendingTasks.length > 0) {
+          notifications.push({
+            type: 'deadline',
+            icon: '📋',
+            title: `${pendingTasks.length} Pending Task${pendingTasks.length > 1 ? 's' : ''}`,
+            message: `You have ${pendingTasks.length} pending task${pendingTasks.length > 1 ? 's' : ''}. Review and start working!`,
+            time: '20 min ago',
+            priority: 2
+          });
+        }
+
+        const inProgressTasks = assignedTasks.filter(t => t.taskStatus === 'in-progress');
+        if (inProgressTasks.length > 2) {
+          notifications.push({
+            type: 'deadline',
+            icon: '⚡',
+            title: 'Too Many In-Progress Tasks',
+            message: `You have ${inProgressTasks.length} tasks in progress. Focus on completing them.`,
+            time: '35 min ago',
+            priority: 2
+          });
+        }
+
+        // Performance achievement
+        const score = PerformanceAI.calculatePerformanceScore(employee);
+        if (score > 85) {
+          notifications.push({
+            type: 'achievement',
+            icon: '🌟',
+            title: 'Excellent Performance!',
+            message: 'You\'re doing great! Keep up this momentum.',
+            time: '45 min ago',
+            priority: 3
+          });
+        }
+
+        // Streak milestone
+        if (employee.streak >= 7 && employee.streak % 7 === 0) {
+          notifications.push({
+            type: 'achievement',
+            icon: '🔥',
+            title: `${employee.streak}-Day Streak!`,
+            message: `Amazing! You\'ve maintained a ${employee.streak}-day streak. You\'re unstoppable! 🎉`,
+            time: '1 hour ago',
+            priority: 3
+          });
+        }
+
+        return notifications.sort((a, b) => a.priority - b.priority);
+      }
+    }
+
+    // ============================================
+    // APPLICATION INITIALIZATION
+    // ============================================
+
+    UIManager.init();
+
+    // Real-time metric simulation (in production, this would connect to APIs)
+    setInterval(() => {
+      State.employees.forEach(emp => {
+        // Simulate metric changes
+        if (Math.random() > 0.7) emp.gitCommits += Math.floor(Math.random() * 3);
+        if (Math.random() > 0.8) emp.tasksCompleted += Math.floor(Math.random() * 2);
+        if (Math.random() > 0.9) emp.jiraTickets += Math.floor(Math.random() * 2);
+        if (Math.random() > 0.6) emp.workHours += Math.floor(Math.random() * 4);
+
+        // Update streak
+        if (emp.gitCommits > 0 && emp.tasksCompleted > 0) {
+          emp.streak = Math.min(emp.streak + 1, 30);
+        }
+
+        emp.lastActive = new Date().toISOString();
+      });
+    }, 30000); // Update every 30 seconds
+
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f74541b545fc1c7',t:'MTc3ODAzMjE2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

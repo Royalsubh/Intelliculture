@@ -1,0 +1,1282 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IntelliCulture - Employee Activity Tracker</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body, #app { height: 100%; width: 100%; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #e2e8f0; }
+
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); } 50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes progressFill { from { width: 0%; } to { width: var(--target-width); } }
+
+    .animate-slide { animation: slideIn 0.5s ease-out; }
+    .animate-fade { animation: fadeIn 0.3s ease-in; }
+    .glow-pulse { animation: pulse-glow 2s infinite; }
+
+    .glass-card { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 12px; }
+    .glass-card:hover { border-color: rgba(148, 163, 184, 0.2); background: rgba(30, 41, 59, 0.95); transition: all 0.3s ease; }
+
+    .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary { background: rgba(51, 65, 85, 0.8); color: #e2e8f0; padding: 10px 20px; border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+    .btn-secondary:hover { background: rgba(71, 85, 105, 0.8); border-color: rgba(148, 163, 184, 0.4); }
+
+    .btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; padding: 8px 16px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; font-size: 13px; }
+    .btn-success:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(34, 197, 94, 0.3); }
+
+    input, textarea, select { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); color: #e2e8f0; padding: 12px; border-radius: 8px; font-size: 14px; transition: all 0.3s ease; }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: #3b82f6; background: rgba(15, 23, 42, 0.95); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+
+    .badge { display: inline-block; padding: 4px 12px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid rgba(96, 165, 250, 0.3); }
+    .badge-success { background: rgba(34, 197, 94, 0.2); color: #4ade80; border-color: rgba(74, 222, 128, 0.3); }
+    .badge-warning { background: rgba(251, 146, 60, 0.2); color: #fb923c; border-color: rgba(251, 146, 60, 0.3); }
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
+    ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; animation: slideIn 0.3s ease-out; }
+
+    .stat-box { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); border: 1px solid rgba(59, 130, 246, 0.2); padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-box .value { font-size: 28px; font-weight: bold; color: #60a5fa; margin: 10px 0; }
+    .stat-box .label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── PROGRESS BAR ── */
+    .progress-track { width: 100%; background: rgba(15, 23, 42, 0.6); border-radius: 999px; height: 10px; overflow: hidden; border: 1px solid rgba(148, 163, 184, 0.1); }
+    .progress-fill { height: 100%; border-radius: 999px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-fill.p0   { background: linear-gradient(90deg, #475569, #64748b); width: 0%; }
+    .progress-fill.p10  { background: linear-gradient(90deg, #ef4444, #f87171); width: 10%; }
+    .progress-fill.p20  { background: linear-gradient(90deg, #ef4444, #fb923c); width: 20%; }
+    .progress-fill.p30  { background: linear-gradient(90deg, #f97316, #fbbf24); width: 30%; }
+    .progress-fill.p40  { background: linear-gradient(90deg, #f59e0b, #fbbf24); width: 40%; }
+    .progress-fill.p50  { background: linear-gradient(90deg, #eab308, #facc15); width: 50%; }
+    .progress-fill.p60  { background: linear-gradient(90deg, #84cc16, #a3e635); width: 60%; }
+    .progress-fill.p70  { background: linear-gradient(90deg, #22c55e, #4ade80); width: 70%; }
+    .progress-fill.p80  { background: linear-gradient(90deg, #16a34a, #22c55e); width: 80%; }
+    .progress-fill.p90  { background: linear-gradient(90deg, #0ea5e9, #38bdf8); width: 90%; }
+    .progress-fill.p100 { background: linear-gradient(90deg, #3b82f6, #06b6d4); width: 100%; }
+
+    .progress-fill-dynamic {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Task card in HR portal */
+    .task-card { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 10px; padding: 16px; transition: all 0.3s ease; }
+    .task-card:hover { border-color: rgba(59, 130, 246, 0.3); background: rgba(15, 23, 42, 0.9); }
+    .task-card.completed { border-color: rgba(34, 197, 94, 0.4); background: rgba(34, 197, 94, 0.04); }
+
+    /* Update log entry */
+    .update-log-entry { background: rgba(15, 23, 42, 0.5); border-left: 3px solid #3b82f6; padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; }
+    .update-log-entry.latest { border-left-color: #22c55e; }
+
+    /* Range slider styling */
+    input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 5px; background: rgba(148, 163, 184, 0.2); outline: none; padding: 0; border: none; box-shadow: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+    input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #3b82f6; cursor: pointer; border: none; }
+
+    /* Pulse dot for live updates */
+    @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.3); } }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; animation: livePulse 1.5s infinite; }
+
+    /* Tab nav */
+    .tab-btn { padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s ease; }
+    .tab-btn.active { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    .tab-btn.inactive { background: rgba(51, 65, 85, 0.5); color: #94a3b8; }
+    .tab-btn.inactive:hover { background: rgba(71, 85, 105, 0.7); color: #e2e8f0; }
+
+    /* Notification panel */
+    .notification-panel { position: absolute; right: 0; margin-top: 8px; width: 384px; background: #1e293b; border: 1px solid rgba(100,116,139,0.5); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 50; max-height: 384px; overflow-y: auto; }
+  </style>
+ </head>
+ <body>
+  <div id="app" class="h-full w-full overflow-hidden"></div>
+  <script>
+  // ============================================
+  // PERFORMANCE AI ENGINE
+  // ============================================
+  class PerformanceAI {
+    static calculatePerformanceScore(employee) {
+      const weights = { gitCommits: 0.25, tasksCompleted: 0.25, meetingsAttended: 0.15, jiraTickets: 0.15, workHours: 0.20 };
+      const maxMetrics = { gitCommits: 100, tasksCompleted: 50, meetingsAttended: 30, jiraTickets: 50, workHours: 160 };
+      let score = 0;
+      for (const [metric, weight] of Object.entries(weights)) {
+        const normalized = Math.min(employee[metric] || 0, maxMetrics[metric]) / maxMetrics[metric];
+        score += normalized * weight * 100;
+      }
+      return Math.round(score);
+    }
+    static detectBurnout(employee) {
+      const workHours = employee.workHours || 0;
+      const consistency = employee.streak || 0;
+      const lastActive = new Date(employee.lastActive || new Date());
+      const daysSinceActive = Math.floor((Date.now() - lastActive) / (1000 * 60 * 60 * 24));
+      let burnoutScore = 0;
+      if (workHours > 50) burnoutScore += 30;
+      if (workHours < 20) burnoutScore += 20;
+      if (consistency < 5) burnoutScore += 20;
+      if (daysSinceActive > 3) burnoutScore += 30;
+      if (burnoutScore >= 60) return 'high';
+      if (burnoutScore >= 40) return 'medium';
+      return 'low';
+    }
+    static generateTrendAnalysis(employee) {
+      const trend = { trajectory: 'stable', prediction: 'likely_to_maintain', insights: [] };
+      const score = this.calculatePerformanceScore(employee);
+      if (employee.streak > 7) { trend.trajectory = 'upward'; trend.prediction = 'likely_to_improve'; trend.insights.push('🚀 Strong momentum with current streak'); }
+      else if (employee.streak > 3) { trend.trajectory = 'stable'; trend.prediction = 'likely_to_maintain'; trend.insights.push('✅ Steady performance'); }
+      else { trend.trajectory = 'downward'; trend.prediction = 'needs_attention'; trend.insights.push('⚠️ Recent activity drop detected'); }
+      if (score > 80) trend.insights.push('⭐ Top performer');
+      if (employee.workHours > 50) trend.insights.push('⏰ Consider workload balance');
+      return trend;
+    }
+    static generateInsights(employee) {
+      const insights = [];
+      const score = this.calculatePerformanceScore(employee);
+      const burnout = this.detectBurnout(employee);
+      if (score > 85) insights.push({ type: 'positive', text: '🌟 Exceptional contributor! Keep maintaining this pace.', emoji: '⭐' });
+      if (burnout === 'high') insights.push({ type: 'warning', text: '🔥 Burnout risk detected. Consider workload adjustment.', emoji: '⚠️' });
+      if (employee.gitCommits < 5) insights.push({ type: 'suggestion', text: '💡 Increase code contributions for better visibility.', emoji: '💭' });
+      if (employee.meetingsAttended > 15) insights.push({ type: 'suggestion', text: '📅 Consider reducing meetings to focus on deliverables.', emoji: '💭' });
+      return insights;
+    }
+    static findBestEmployee(taskTitle, taskPriority, employees) {
+      const taskLower = taskTitle.toLowerCase();
+      const skillMap = {
+        'frontend': { skill: 'frontend', weight: 1 }, 'backend': { skill: 'backend', weight: 1 },
+        'design': { skill: 'design', weight: 1 }, 'api': { skill: 'backend', weight: 0.8 },
+        'database': { skill: 'backend', weight: 0.9 }, 'authentication': { skill: 'backend', weight: 0.85 },
+        'ui': { skill: 'frontend', weight: 0.9 }, 'bug': { skill: 'general', weight: 0.7 },
+        'feature': { skill: 'general', weight: 0.8 }, 'test': { skill: 'general', weight: 0.6 },
+        'documentation': { skill: 'general', weight: 0.5 }, 'review': { skill: 'general', weight: 0.7 }
+      };
+      const scoredEmployees = employees
+        .filter(emp => { const assignedTasks = State.tasks.filter(t => t.taskAssignedTo === emp.email).length; return assignedTasks < 5; })
+        .map(emp => {
+          let score = 0;
+          const perfScore = this.calculatePerformanceScore(emp);
+          const burnout = this.detectBurnout(emp);
+          score += perfScore * 0.4;
+          if (burnout === 'high') score -= 30;
+          if (burnout === 'medium') score -= 10;
+          if (taskPriority === 'critical') score += perfScore > 75 ? 20 : perfScore > 60 ? 10 : 0;
+          else if (taskPriority === 'high') score += perfScore > 70 ? 15 : perfScore > 50 ? 5 : 0;
+          for (const [keyword, skillData] of Object.entries(skillMap)) {
+            if (taskLower.includes(keyword)) {
+              if (skillData.skill === 'frontend' && emp.gitCommits > 20) score += 15 * skillData.weight;
+              else if (skillData.skill === 'backend' && emp.jiraTickets > 15) score += 15 * skillData.weight;
+              else if (skillData.skill === 'design' && emp.meetingsAttended > 15) score += 10 * skillData.weight;
+              else if (skillData.skill === 'general') score += 5 * skillData.weight;
+            }
+          }
+          score += emp.streak * 1.5;
+          const currentTasks = State.tasks.filter(t => t.taskAssignedTo === emp.email).length;
+          score += (5 - currentTasks) * 2;
+          return { employee: emp, score: Math.max(0, score), reason: this.generateMatchReason(emp, taskTitle, perfScore, burnout) };
+        })
+        .sort((a, b) => b.score - a.score);
+      return scoredEmployees[0] || null;
+    }
+    static generateMatchReason(employee, taskTitle, perfScore, burnout) {
+      const reasons = [];
+      if (perfScore > 80) reasons.push('Top performer');
+      else if (perfScore > 60) reasons.push('Strong performer');
+      if (employee.streak > 5) reasons.push(`${employee.streak}-day streak`);
+      const currentTasks = State.tasks.filter(t => t.taskAssignedTo === employee.email).length;
+      if (currentTasks < 2) reasons.push('Light workload');
+      if (burnout === 'low') reasons.push('Good health');
+      if (employee.gitCommits > 30) reasons.push('Strong coder');
+      return reasons.slice(0, 3).join(' • ');
+    }
+  }
+
+  // ============================================
+  // GAMIFICATION ENGINE
+  // ============================================
+  class GamificationEngine {
+    static awardBadges(employee) {
+      const badges = [];
+      const score = PerformanceAI.calculatePerformanceScore(employee);
+      if (score > 90) badges.push({ name: 'superstar', icon: '⭐', label: 'Superstar' });
+      if (employee.streak > 14) badges.push({ name: 'flame', icon: '🔥', label: '14-Day Streak' });
+      if (employee.gitCommits > 50) badges.push({ name: 'coder', icon: '💻', label: 'Code Master' });
+      if (employee.tasksCompleted > 30) badges.push({ name: 'taskforce', icon: '✅', label: 'Task Force' });
+      if (employee.meetingsAttended > 20) badges.push({ name: 'connector', icon: '🤝', label: 'Team Connector' });
+      return badges;
+    }
+    static calculateLeaderboardPosition(employees) {
+      return employees
+        .map(emp => ({ ...emp, score: PerformanceAI.calculatePerformanceScore(emp) }))
+        .sort((a, b) => b.score - a.score)
+        .map((emp, idx) => ({ ...emp, rank: idx + 1, medal: idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '' }));
+    }
+  }
+
+  // ============================================
+  // CHATBOT ENGINE
+  // ============================================
+  class ChatbotEngine {
+    static generateResponse(query, employees, currentUser) {
+      const lowerQuery = query.toLowerCase();
+      if (lowerQuery.includes('performance') || lowerQuery.includes('how am i')) {
+        const user = employees.find(e => e.email === currentUser.email);
+        const score = PerformanceAI.calculatePerformanceScore(user);
+        return `📊 Your performance score: ${score}/100. You've completed ${user.tasksCompleted} tasks with ${user.gitCommits} commits. ${score > 80 ? '🌟 Excellent work!' : 'Keep pushing! 💪'}`;
+      }
+      if (lowerQuery.includes('top performer') || lowerQuery.includes('best')) {
+        const leaderboard = GamificationEngine.calculateLeaderboardPosition(employees);
+        const topEmp = leaderboard[0];
+        return `🏆 ${topEmp.name} is leading with ${topEmp.score} points! Great performance this month.`;
+      }
+      if (lowerQuery.includes('burnout') || lowerQuery.includes('stress')) {
+        const user = employees.find(e => e.email === currentUser.email);
+        const burnout = PerformanceAI.detectBurnout(user);
+        return `${burnout === 'high' ? '🔥 High burnout risk detected. Take a break!' : '✅ You\'re doing fine. Keep the balance! 😊'}`;
+      }
+      if (lowerQuery.includes('task') || lowerQuery.includes('progress')) {
+        const myTasks = State.tasks.filter(t => t.taskAssignedTo === currentUser.email);
+        if (myTasks.length === 0) return '📋 No tasks assigned to you yet.';
+        const avgProgress = Math.round(myTasks.reduce((a, t) => a + (t.progress || 0), 0) / myTasks.length);
+        return `📋 You have ${myTasks.length} task(s). Average progress: ${avgProgress}%. Keep updating your progress so HR stays informed! 🚀`;
+      }
+      return '🤖 I can help! Try asking about your performance, top performers, burnout risk, tasks, or goals.';
+    }
+    static generateHRResponse(query, employees, tasks = []) {
+      const lowerQuery = query.toLowerCase();
+      if (lowerQuery.includes('task progress') || lowerQuery.includes('task update') || lowerQuery.includes('progress')) {
+        const assigned = tasks.filter(t => t.taskAssignedTo);
+        if (assigned.length === 0) return '📋 No tasks assigned yet.';
+        let analysis = `📊 <strong>Task Progress Overview (${assigned.length} tasks):</strong><br>`;
+        assigned.forEach(t => {
+          const emp = employees.find(e => e.email === t.taskAssignedTo);
+          const progress = t.progress || 0;
+          const statusIcon = progress === 100 ? '✅' : progress >= 70 ? '🟢' : progress >= 40 ? '🟡' : '🔴';
+          analysis += `${statusIcon} <strong>${t.taskTitle}</strong> → ${emp ? emp.name : 'Unassigned'} (${progress}%)<br>`;
+          if (t.progressNote) analysis += `&nbsp;&nbsp;💬 "${t.progressNote}"<br>`;
+        });
+        const avgProgress = Math.round(assigned.reduce((a, t) => a + (t.progress || 0), 0) / assigned.length);
+        analysis += `<br>📈 Average completion: <strong>${avgProgress}%</strong>`;
+        return analysis;
+      }
+      if (lowerQuery.includes('remove') || lowerQuery.includes('fire') || lowerQuery.includes('underperforming')) {
+        const underperforming = employees.filter(e => PerformanceAI.calculatePerformanceScore(e) < 40);
+        if (underperforming.length === 0) return `✅ <strong>Good News!</strong><br>No severely underperforming employees detected.`;
+        let analysis = `⚠️ <strong>Low Performance Employees (${underperforming.length}):</strong><br>`;
+        analysis += underperforming.map(e => { const score = PerformanceAI.calculatePerformanceScore(e); return `• <strong>${e.name}</strong><br>&nbsp;&nbsp;Score: ${score}/100<br>&nbsp;&nbsp;Recommendation: Consider training or performance plan`; }).join('<br>');
+        return analysis;
+      }
+      if (lowerQuery.includes('top') && (lowerQuery.includes('performer') || lowerQuery.includes('employee'))) {
+        const leaderboard = GamificationEngine.calculateLeaderboardPosition(employees);
+        const top3 = leaderboard.slice(0, 3);
+        return `🏆 <strong>Top 3 Performers:</strong><br>${top3.map((emp, i) => `${i+1}. ${emp.name} - ${emp.score} points (${emp.department})`).join('<br>')}`;
+      }
+      if (lowerQuery.includes('burnout') || lowerQuery.includes('risk')) {
+        const atRisk = employees.filter(e => PerformanceAI.detectBurnout(e) === 'high');
+        if (atRisk.length === 0) return '✅ No employees with high burnout risk detected.';
+        let analysis = `🔥 <strong>High Burnout Risk (${atRisk.length}):</strong><br>`;
+        analysis += atRisk.map(e => `• ${e.name} - ${e.workHours}h/week, Streak: ${e.streak} days`).join('<br>');
+        return analysis;
+      }
+      if (lowerQuery.includes('average') || lowerQuery.includes('avg')) {
+        const avgScore = Math.round(employees.reduce((a, e) => a + PerformanceAI.calculatePerformanceScore(e), 0) / employees.length);
+        return `📊 <strong>Team Averages:</strong><br>Commits: ${Math.round(employees.reduce((a,e)=>a+e.gitCommits,0)/employees.length)}<br>Tasks: ${Math.round(employees.reduce((a,e)=>a+e.tasksCompleted,0)/employees.length)}<br>Performance Score: ${avgScore}/100`;
+      }
+      return '💡 <strong>I can help with:</strong><br>• Task progress updates<br>• Employee performance analysis<br>• Burnout risk detection<br>• Team averages & trends<br>• Top performers';
+    }
+  }
+
+  // ============================================
+  // STATE MANAGEMENT
+  // ============================================
+  const State = {
+    users: [], employees: [], tasks: [], notifications: [], feedback: [],
+    currentUser: null, currentView: 'auth',
+
+    init() { this.loadDefaultData(); },
+
+    loadDefaultData() {
+      this.users = [
+        { id: '1', email: 'hr@intelliculture.com', password: 'hr123', name: 'Sarah HR', role: 'hr', createdAt: new Date().toISOString() },
+        { id: '2', email: 'alice@dev.com', password: 'emp123', name: 'Alice Kumar', role: 'employee', department: 'Engineering', createdAt: new Date().toISOString() },
+        { id: '3', email: 'bob@dev.com', password: 'emp123', name: 'Bob Chen', role: 'employee', department: 'Engineering', createdAt: new Date().toISOString() },
+        { id: '4', email: 'carol@dev.com', password: 'emp123', name: 'Carol Smith', role: 'employee', department: 'Product', createdAt: new Date().toISOString() }
+      ];
+      this.employees = [
+        { id: '2', email: 'alice@dev.com', name: 'Alice Kumar', role: 'employee', department: 'Engineering', gitCommits: 45, tasksCompleted: 28, meetingsAttended: 12, jiraTickets: 32, workHours: 38, lastActive: new Date(Date.now() - 1000*60*30).toISOString(), score: 85, streak: 8, badges: 'superstar,coder', burnoutRisk: 'low', createdAt: new Date().toISOString() },
+        { id: '3', email: 'bob@dev.com', name: 'Bob Chen', role: 'employee', department: 'Engineering', gitCommits: 28, tasksCompleted: 22, meetingsAttended: 18, jiraTickets: 20, workHours: 42, lastActive: new Date(Date.now() - 1000*60*120).toISOString(), score: 72, streak: 5, badges: '', burnoutRisk: 'medium', createdAt: new Date().toISOString() },
+        { id: '4', email: 'carol@dev.com', name: 'Carol Smith', role: 'employee', department: 'Product', gitCommits: 12, tasksCompleted: 35, meetingsAttended: 22, jiraTickets: 28, workHours: 52, lastActive: new Date(Date.now() - 1000*60*300).toISOString(), score: 78, streak: 3, badges: 'taskforce', burnoutRisk: 'high', createdAt: new Date().toISOString() }
+      ];
+      // Tasks now include progress fields
+      this.tasks = [
+        { id: '1', taskTitle: 'Fix authentication bug', taskAssignedTo: 'alice@dev.com', taskPriority: 'high', taskStatus: 'in-progress', progress: 65, progressNote: 'Identified root cause, implementing fix now', progressUpdatedAt: new Date(Date.now() - 1000*60*45).toISOString(), progressLog: [{ progress: 20, note: 'Started investigation', timestamp: new Date(Date.now() - 1000*60*180).toISOString() }, { progress: 65, note: 'Identified root cause, implementing fix now', timestamp: new Date(Date.now() - 1000*60*45).toISOString() }], createdAt: new Date().toISOString() },
+        { id: '2', taskTitle: 'Design dashboard UI', taskAssignedTo: 'carol@dev.com', taskPriority: 'high', taskStatus: 'in-progress', progress: 40, progressNote: 'Wireframes done, working on high-fidelity mockups', progressUpdatedAt: new Date(Date.now() - 1000*60*120).toISOString(), progressLog: [{ progress: 10, note: 'Started wireframing', timestamp: new Date(Date.now() - 1000*60*300).toISOString() }, { progress: 40, note: 'Wireframes done, working on high-fidelity mockups', timestamp: new Date(Date.now() - 1000*60*120).toISOString() }], createdAt: new Date().toISOString() },
+        { id: '3', taskTitle: 'API integration', taskAssignedTo: 'bob@dev.com', taskPriority: 'medium', taskStatus: 'in-progress', progress: 15, progressNote: 'Reading API docs', progressUpdatedAt: new Date(Date.now() - 1000*60*200).toISOString(), progressLog: [{ progress: 15, note: 'Reading API docs', timestamp: new Date(Date.now() - 1000*60*200).toISOString() }], createdAt: new Date().toISOString() },
+        { id: '4', taskTitle: 'Write unit tests', taskAssignedTo: '', taskPriority: 'low', taskStatus: 'pending', progress: 0, progressNote: '', progressUpdatedAt: null, progressLog: [], createdAt: new Date().toISOString() }
+      ];
+      this.notifications = [
+        { id: '1', notificationMessage: 'New task assigned: Fix auth bug', notificationType: 'task', isRead: false, createdAt: new Date().toISOString() },
+        { id: '2', notificationMessage: 'Alice updated task progress to 65%', notificationType: 'progress', isRead: false, createdAt: new Date().toISOString() }
+      ];
+    },
+
+    login(email, password) {
+      const user = this.users.find(u => u.email === email && u.password === password);
+      if (user) { this.currentUser = user; this.currentView = user.role === 'hr' ? 'hr-dashboard' : 'employee-dashboard'; return true; }
+      return false;
+    },
+
+    signup(email, password, name, role, department) {
+      if (this.users.find(u => u.email === email)) return false;
+      const newUser = { id: String(this.users.length + 1), email, password, name, role, department: department || 'General', createdAt: new Date().toISOString() };
+      this.users.push(newUser);
+      if (role === 'employee') {
+        this.employees.push({ id: newUser.id, email, name, role: 'employee', department, gitCommits: 0, tasksCompleted: 0, meetingsAttended: 0, jiraTickets: 0, workHours: 0, lastActive: new Date().toISOString(), score: 0, streak: 0, badges: '', burnoutRisk: 'low', createdAt: new Date().toISOString() });
+      }
+      return true;
+    },
+
+    updateTaskProgress(taskId, newProgress, note) {
+      const task = this.tasks.find(t => t.id === taskId);
+      if (!task) return false;
+      task.progress = newProgress;
+      task.progressNote = note;
+      task.progressUpdatedAt = new Date().toISOString();
+      if (!task.progressLog) task.progressLog = [];
+      task.progressLog.push({ progress: newProgress, note, timestamp: new Date().toISOString() });
+      if (newProgress === 100) task.taskStatus = 'completed';
+      else if (newProgress > 0) task.taskStatus = 'in-progress';
+      // Add notification for HR
+      const emp = this.employees.find(e => e.email === task.taskAssignedTo);
+      this.notifications.push({
+        id: String(this.notifications.length + 1),
+        notificationMessage: `${emp ? emp.name : 'Employee'} updated "${task.taskTitle}" to ${newProgress}%`,
+        notificationType: 'progress',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+      return true;
+    }
+  };
+
+  // ============================================
+  // PROGRESS HELPERS
+  // ============================================
+  function getProgressColor(p) {
+    if (p === 100) return '#3b82f6';
+    if (p >= 70) return '#22c55e';
+    if (p >= 40) return '#eab308';
+    if (p >= 10) return '#f97316';
+    return '#475569';
+  }
+  function getProgressLabel(p) {
+    if (p === 100) return '✅ Done';
+    if (p >= 80) return '🔵 Almost done';
+    if (p >= 60) return '🟢 Good progress';
+    if (p >= 40) return '🟡 In progress';
+    if (p >= 10) return '🟠 Just started';
+    return '⬜ Not started';
+  }
+  function timeAgo(isoStr) {
+    if (!isoStr) return 'Never';
+    const diff = Date.now() - new Date(isoStr);
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs/24)}d ago`;
+  }
+
+  // ============================================
+  // UI MANAGER
+  // ============================================
+  class UIManager {
+    static init() { State.init(); this.render(); }
+
+    static render() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      if (State.currentView === 'auth') app.innerHTML = this.authPage();
+      else if (State.currentView === 'signup') app.innerHTML = this.signupPage();
+      else if (State.currentView === 'hr-dashboard') app.innerHTML = this.hrDashboard();
+      else if (State.currentView === 'employee-dashboard') app.innerHTML = this.employeeDashboard();
+      this.attachEventListeners();
+      lucide.createIcons();
+    }
+
+    static authPage() {
+      return `
+        <div class="h-full w-full flex items-center justify-center p-4 overflow-auto">
+          <div class="w-full max-w-md">
+            <div class="text-center mb-8">
+              <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-2">IntelliCulture</h1>
+              <p class="text-gray-400">AI-Powered Employee Activity Tracker</p>
+            </div>
+            <div class="glass-card p-8 space-y-6">
+              <h2 class="text-xl font-bold">Login</h2>
+              <div><label class="block text-sm mb-2">Email</label><input id="login-email" type="email" placeholder="your@email.com" class="w-full"></div>
+              <div><label class="block text-sm mb-2">Password</label><input id="login-password" type="password" placeholder="••••••••" class="w-full"></div>
+              <button id="login-btn" class="btn-primary w-full">Sign In</button>
+              <div class="text-center"><p class="text-sm text-gray-400">Don't have an account? <button id="signup-toggle" class="text-blue-400 hover:text-blue-300 font-semibold">Sign Up</button></p></div>
+              <div class="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4 text-xs text-gray-300">
+                <p class="font-semibold mb-2"></p>
+                <p></p>
+                <p></p>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    static signupPage() {
+      return `
+        <div class="h-full w-full flex items-center justify-center p-4 overflow-auto">
+          <div class="w-full max-w-md">
+            <div class="text-center mb-8"><h1 class="text-3xl font-bold text-blue-400 mb-2">Create Account</h1><p class="text-gray-400">Join IntelliCulture</p></div>
+            <div class="glass-card p-8 space-y-6">
+              <div><label class="block text-sm mb-2">Full Name</label><input id="signup-name" type="text" placeholder="Your Name" class="w-full"></div>
+              <div><label class="block text-sm mb-2">Email</label><input id="signup-email" type="email" placeholder="your@email.com" class="w-full"></div>
+              <div><label class="block text-sm mb-2">Password</label><input id="signup-password" type="password" placeholder="••••••••" class="w-full"></div>
+              <div><label class="block text-sm mb-2">Role</label><select id="signup-role" class="w-full"><option value="">Select Role</option><option value="employee">Employee</option><option value="hr">HR</option></select></div>
+              <div id="department-field" style="display:none;"><label class="block text-sm mb-2">Department</label><input id="signup-department" type="text" placeholder="e.g., Engineering" class="w-full"></div>
+              <button id="signup-btn" class="btn-primary w-full">Create Account</button>
+              <div class="text-center"><button id="back-to-login" class="text-blue-400 hover:text-blue-300 font-semibold">Back to Login</button></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── HR DASHBOARD ──────────────────────────────
+    static hrDashboard() {
+      const leaderboard = GamificationEngine.calculateLeaderboardPosition(State.employees);
+      const notifications = this.getHRNotifications();
+      const assignedTasks = State.tasks.filter(t => t.taskAssignedTo);
+      const avgTeamProgress = assignedTasks.length ? Math.round(assignedTasks.reduce((a, t) => a + (t.progress || 0), 0) / assignedTasks.length) : 0;
+      const completedTasks = State.tasks.filter(t => t.progress === 100).length;
+
+      return `
+        <div class="h-full w-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+          <!-- Header -->
+          <div class="bg-slate-800/50 border-b border-slate-700/50 p-6">
+            <div class="flex justify-between items-center max-w-7xl mx-auto">
+              <div>
+                <h1 class="text-3xl font-bold text-blue-400">HR Dashboard</h1>
+                <p class="text-gray-400 text-sm mt-1">Welcome, ${State.currentUser.name} &nbsp;<span class="live-dot"></span>&nbsp;<span class="text-xs text-green-400">Live</span></p>
+              </div>
+              <div class="flex items-center gap-4">
+                <button id="hr-chat-btn" class="btn-secondary" title="Ask AI about employees"><i data-lucide="message-circle" style="width:20px;height:20px;"></i></button>
+                <div class="relative">
+                  <button id="notification-bell" class="btn-secondary relative">
+                    <i data-lucide="bell" style="width:20px;height:20px;"></i>
+                    ${notifications.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${notifications.length}</span>` : ''}
+                  </button>
+                  <div id="notification-panel" class="hidden notification-panel">
+                    <div class="p-4 border-b border-slate-700"><h3 class="font-bold text-blue-400">Notifications</h3></div>
+                    <div class="p-4 space-y-3">
+                      ${notifications.length > 0 ? notifications.map(n => `
+                        <div class="p-3 rounded-lg ${n.type === 'burnout' ? 'bg-red-900/20 border border-red-700/30' : n.type === 'progress' ? 'bg-green-900/20 border border-green-700/30' : n.type === 'deadline' ? 'bg-yellow-900/20 border border-yellow-700/30' : 'bg-blue-900/20 border border-blue-700/30'} animate-slide">
+                          <div class="flex gap-2 items-start">
+                            <span class="text-xl">${n.icon}</span>
+                            <div class="flex-1"><p class="font-semibold text-sm">${n.title}</p><p class="text-xs text-gray-300 mt-1">${n.message}</p><p class="text-xs text-gray-400 mt-2">${n.time}</p></div>
+                          </div>
+                        </div>`).join('') : '<p class="text-gray-400 text-sm">No notifications</p>'}
+                    </div>
+                  </div>
+                </div>
+                <button id="logout-btn" class="btn-secondary">Logout</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="flex-1 overflow-auto p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+              <!-- Summary Cards -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="stat-box"><i data-lucide="users" style="width:24px;height:24px;margin:0 auto;color:#60a5fa;"></i><div class="value">${State.employees.length}</div><div class="label">Total Employees</div></div>
+                <div class="stat-box"><i data-lucide="trending-up" style="width:24px;height:24px;margin:0 auto;color:#4ade80;"></i><div class="value">${Math.round(State.employees.reduce((a,e)=>a+PerformanceAI.calculatePerformanceScore(e),0)/State.employees.length)}</div><div class="label">Avg Performance</div></div>
+                <div class="stat-box"><i data-lucide="check-square" style="width:24px;height:24px;margin:0 auto;color:#a78bfa;"></i><div class="value">${avgTeamProgress}%</div><div class="label">Team Task Progress</div></div>
+                <div class="stat-box"><i data-lucide="alert-circle" style="width:24px;height:24px;margin:0 auto;color:#fb923c;"></i><div class="value">${State.employees.filter(e=>PerformanceAI.detectBurnout(e)==='high').length}</div><div class="label">Burnout Risk</div></div>
+              </div>
+
+              <!-- ── TASK PROGRESS TRACKER (NEW FEATURE) ── -->
+              <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                  <h2 class="text-xl font-bold flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" style="width:20px;height:20px;color:#60a5fa;"></i>
+                    Task Progress Tracker
+                    <span class="live-dot ml-2"></span>
+                  </h2>
+                  <div class="flex items-center gap-2 text-xs text-gray-400">
+                    <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span> Completed
+                    <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block ml-2"></span> In Progress
+                    <span class="w-3 h-3 rounded-full bg-slate-500 inline-block ml-2"></span> Not Started
+                  </div>
+                </div>
+
+                <div class="space-y-4" id="hr-task-list">
+                  ${State.tasks.map(task => {
+                    const progress = task.progress || 0;
+                    const emp = State.employees.find(e => e.email === task.taskAssignedTo);
+                    const color = getProgressColor(progress);
+                    const priorityClass = task.taskPriority === 'high' || task.taskPriority === 'critical' ? 'badge-danger' : task.taskPriority === 'medium' ? 'badge-warning' : 'badge-success';
+                    const isCompleted = progress === 100;
+                    const lastLogEntry = task.progressLog && task.progressLog.length > 0 ? task.progressLog[task.progressLog.length-1] : null;
+
+                    return `
+                      <div class="task-card ${isCompleted ? 'completed' : ''} cursor-pointer hr-task-detail-btn" data-task-id="${task.id}">
+                        <div class="flex items-start justify-between mb-3">
+                          <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <p class="font-semibold text-base">${isCompleted ? '✅' : '🔄'} ${task.taskTitle}</p>
+                              <span class="badge ${priorityClass}" style="font-size:11px;padding:2px 8px;">${task.taskPriority}</span>
+                            </div>
+                            <div class="flex items-center gap-3 mt-1">
+                              <p class="text-xs text-gray-400">
+                                ${emp ? `👤 <span class="text-blue-300 font-medium">${emp.name}</span> · ${emp.department}` : '<span class="text-yellow-400">⚠️ Unassigned</span>'}
+                              </p>
+                              ${task.progressUpdatedAt ? `<p class="text-xs text-gray-500">Updated ${timeAgo(task.progressUpdatedAt)}</p>` : ''}
+                            </div>
+                          </div>
+                          <div class="text-right ml-4 shrink-0">
+                            <p class="text-2xl font-bold" style="color:${color};">${progress}%</p>
+                            <p class="text-xs text-gray-400">${getProgressLabel(progress)}</p>
+                          </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress-track mb-3">
+                          <div class="progress-fill-dynamic" style="width:${progress}%;background:linear-gradient(90deg, ${color}cc, ${color});"></div>
+                        </div>
+
+                        <!-- Latest note -->
+                        ${lastLogEntry ? `
+                          <div class="update-log-entry latest">
+                            <p class="text-gray-400 text-xs mb-1">💬 Latest update from ${emp ? emp.name : 'employee'}:</p>
+                            <p class="text-gray-200">"${lastLogEntry.note}"</p>
+                          </div>
+                        ` : task.taskAssignedTo ? `<p class="text-xs text-gray-500 italic">No updates posted yet.</p>` : `<p class="text-xs text-yellow-600 italic">⚠️ Task not assigned — assign to track progress.</p>`}
+                      </div>`;
+                  }).join('')}
+                </div>
+              </div>
+
+              <!-- Leaderboard -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="trophy" style="width:20px;height:20px;color:#fbbf24;"></i> Performance Leaderboard</h2>
+                <div class="space-y-3">
+                  ${leaderboard.slice(0, 5).map(emp => `
+                    <div class="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition">
+                      <div class="flex items-center gap-3">
+                        <span class="text-xl font-bold">${emp.medal || '#' + emp.rank}</span>
+                        <div><p class="font-semibold">${emp.name}</p><p class="text-xs text-gray-400">${emp.department}</p></div>
+                      </div>
+                      <div class="text-right"><p class="font-bold text-blue-400">${emp.score} pts</p><p class="text-xs text-gray-400">Score</p></div>
+                    </div>`).join('')}
+                </div>
+              </div>
+
+              <!-- Employee Activity -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="activity" style="width:20px;height:20px;color:#60a5fa;"></i> Employee Activity</h2>
+                <div class="space-y-3">
+                  ${State.employees.map(emp => {
+                    const burnout = PerformanceAI.detectBurnout(emp);
+                    const score = PerformanceAI.calculatePerformanceScore(emp);
+                    const empTasks = State.tasks.filter(t => t.taskAssignedTo === emp.email);
+                    const avgProgress = empTasks.length ? Math.round(empTasks.reduce((a,t)=>a+(t.progress||0),0)/empTasks.length) : null;
+                    const burnoutColor = burnout === 'high' ? 'badge-danger' : burnout === 'medium' ? 'badge-warning' : 'badge-success';
+                    return `
+                      <div class="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition cursor-pointer employee-row" data-email="${emp.email}">
+                        <div class="flex-1">
+                          <p class="font-semibold">${emp.name}</p>
+                          <p class="text-xs text-gray-400">${emp.email}</p>
+                          <div class="flex gap-3 mt-2 flex-wrap">
+                            <span class="text-xs text-gray-300">📊 ${score}/100</span>
+                            <span class="text-xs text-gray-300">🔥 ${emp.streak}d streak</span>
+                            <span class="text-xs text-gray-300">💻 ${emp.gitCommits} commits</span>
+                            ${avgProgress !== null ? `<span class="text-xs font-semibold" style="color:${getProgressColor(avgProgress)};">📋 ${avgProgress}% task progress</span>` : '<span class="text-xs text-gray-500">No tasks</span>'}
+                          </div>
+                        </div>
+                        <span class="badge ${burnoutColor}" style="margin-left:10px;">${burnout === 'high' ? '⚠️ High Risk' : burnout === 'medium' ? '⏰ Medium' : '✅ Healthy'}</span>
+                      </div>`;
+                  }).join('')}
+                </div>
+              </div>
+
+              <!-- Quick Actions -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4">Quick Actions</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button id="assign-task-btn" class="btn-primary w-full flex items-center justify-center gap-2"><i data-lucide="plus" style="width:18px;height:18px;"></i> Assign Task</button>
+                  <button id="export-report-btn" class="btn-primary w-full flex items-center justify-center gap-2"><i data-lucide="download" style="width:18px;height:18px;"></i> Export Report</button>
+                  <button id="view-feedback-btn" class="btn-primary w-full flex items-center justify-center gap-2"><i data-lucide="message-circle" style="width:18px;height:18px;"></i> Anonymous Feedback</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MODALS -->
+          <!-- HR Task Detail Modal -->
+          <div id="hr-task-detail-modal" style="display:none;" class="modal-overlay">
+            <div class="modal-content" style="max-width:600px;max-height:85vh;overflow-y:auto;" id="hr-task-detail-content"></div>
+          </div>
+
+          <!-- Employee Detail Modal -->
+          <div id="employee-detail-modal" style="display:none;" class="modal-overlay">
+            <div class="modal-content" id="employee-detail-content"></div>
+          </div>
+
+          <!-- HR Chat Modal -->
+          <div id="hr-chat-modal" style="display:none;" class="modal-overlay">
+            <div class="modal-content" style="max-width:600px;max-height:80vh;display:flex;flex-direction:column;">
+              <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="message-circle" style="width:20px;height:20px;color:#60a5fa;"></i> HR Intelligence Chat</h2>
+              <p class="text-xs text-gray-400 mb-4">Ask anything about employees, task progress, workload, or team insights.</p>
+              <div id="hr-chat-history" class="flex-1 space-y-3 mb-4 overflow-y-auto" style="min-height:300px;"></div>
+              <div class="space-y-3">
+                <div class="flex gap-2">
+                  <input id="hr-chat-input" type="text" placeholder="Ask about task progress, burnout, performance..." class="flex-1" style="font-size:14px;">
+                  <button id="hr-chat-send-btn" class="btn-primary">Send</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="hr-quick-query text-xs btn-secondary" data-query="Show me all task progress updates">📊 Task Progress</button>
+                  <button class="hr-quick-query text-xs btn-secondary" data-query="Who are the top 3 performers?">⭐ Top Performers</button>
+                  <button class="hr-quick-query text-xs btn-secondary" data-query="Show employees with burnout risk">🔥 Burnout Risk</button>
+                  <button class="hr-quick-query text-xs btn-secondary" data-query="Show team averages">📈 Team Averages</button>
+                </div>
+              </div>
+              <button id="close-hr-chat-modal" class="btn-secondary w-full mt-4">Close</button>
+            </div>
+          </div>
+
+          <!-- Task Assign Modal -->
+          <div id="task-assign-modal" style="display:none;" class="modal-overlay">
+            <div class="modal-content">
+              <h2 class="text-xl font-bold mb-4">Assign Task</h2>
+              <div class="space-y-4">
+                <div><label class="block text-sm mb-2">Task Title</label><input id="task-title" type="text" placeholder="e.g., Fix login bug" class="w-full"></div>
+                <div><label class="block text-sm mb-2">Priority</label>
+                  <select id="task-priority" class="w-full"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="critical">Critical</option></select>
+                </div>
+                <div class="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <p class="text-sm font-semibold text-blue-400">🤖 AI Smart Assignment</p>
+                    <button id="auto-assign-btn" class="btn-primary text-sm py-2 px-4">Auto Assign</button>
+                  </div>
+                  <div id="ai-suggestion" class="hidden space-y-3">
+                    <div class="p-3 rounded bg-slate-900/50 border border-green-700/30">
+                      <p class="text-xs text-gray-400 mb-1">Recommended For:</p>
+                      <p class="font-semibold text-green-400" id="suggested-employee"></p>
+                      <p class="text-xs text-gray-300 mt-2" id="suggested-reason"></p>
+                      <div class="flex gap-2 mt-3">
+                        <button id="accept-suggestion-btn" class="btn-primary text-xs py-1 px-3 flex-1">Accept ✓</button>
+                        <button id="reject-suggestion-btn" class="btn-secondary text-xs py-1 px-3 flex-1">Reject</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="manual-assign-section">
+                  <label class="block text-sm mb-2">Or Assign Manually</label>
+                  <select id="task-assign-to" class="w-full">
+                    <option value="">Select Employee</option>
+                    ${State.employees.map(e => `<option value="${e.email}">${e.name}</option>`).join('')}
+                  </select>
+                </div>
+                <button id="create-task-btn" class="btn-primary w-full">Create Task</button>
+              </div>
+              <button id="close-task-modal" class="btn-secondary w-full mt-4">Close</button>
+            </div>
+          </div>
+
+          <!-- Feedback Modal -->
+          <div id="feedback-modal" style="display:none;" class="modal-overlay">
+            <div class="modal-content">
+              <h2 class="text-xl font-bold mb-4">Anonymous Feedback</h2>
+              <div id="feedback-list" class="space-y-4 max-h-96 overflow-y-auto"></div>
+              <button id="close-feedback-modal" class="btn-secondary w-full mt-4">Close</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── EMPLOYEE DASHBOARD ────────────────────────
+    static employeeDashboard() {
+      const employee = State.employees.find(e => e.email === State.currentUser.email);
+      const score = PerformanceAI.calculatePerformanceScore(employee);
+      const burnout = PerformanceAI.detectBurnout(employee);
+      const trend = PerformanceAI.generateTrendAnalysis(employee);
+      const insights = PerformanceAI.generateInsights(employee);
+      const badges = GamificationEngine.awardBadges(employee);
+      const notifications = this.getEmployeeNotifications(employee);
+      const myTasks = State.tasks.filter(t => t.taskAssignedTo === employee.email);
+
+      return `
+        <div class="h-full w-full flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+          <!-- Header -->
+          <div class="bg-slate-800/50 border-b border-slate-700/50 p-6">
+            <div class="flex justify-between items-center max-w-7xl mx-auto">
+              <div>
+                <h1 class="text-3xl font-bold text-blue-400">My Dashboard</h1>
+                <p class="text-gray-400 text-sm mt-1">Welcome, ${employee.name}</p>
+              </div>
+              <div class="flex items-center gap-4">
+                <div class="relative">
+                  <button id="notification-bell" class="btn-secondary relative">
+                    <i data-lucide="bell" style="width:20px;height:20px;"></i>
+                    ${notifications.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${notifications.length}</span>` : ''}
+                  </button>
+                  <div id="notification-panel" class="hidden notification-panel">
+                    <div class="p-4 border-b border-slate-700"><h3 class="font-bold text-blue-400">Notifications</h3></div>
+                    <div class="p-4 space-y-3">
+                      ${notifications.length > 0 ? notifications.map(n => `
+                        <div class="p-3 rounded-lg ${n.type==='burnout'?'bg-red-900/20 border border-red-700/30':n.type==='deadline'?'bg-yellow-900/20 border border-yellow-700/30':'bg-blue-900/20 border border-blue-700/30'} animate-slide">
+                          <div class="flex gap-2 items-start">
+                            <span class="text-xl">${n.icon}</span>
+                            <div class="flex-1"><p class="font-semibold text-sm">${n.title}</p><p class="text-xs text-gray-300 mt-1">${n.message}</p><p class="text-xs text-gray-400 mt-2">${n.time}</p></div>
+                          </div>
+                        </div>`).join('') : '<p class="text-gray-400 text-sm">No notifications</p>'}
+                    </div>
+                  </div>
+                </div>
+                <button id="logout-btn" class="btn-secondary">Logout</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="flex-1 overflow-auto p-6">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+              <!-- Performance Score -->
+              <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                  <div><h2 class="text-2xl font-bold mb-2">Performance Score</h2><p class="text-gray-400 text-sm">Track your contribution metrics</p></div>
+                  <div class="text-center">
+                    <div class="relative w-32 h-32">
+                      <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="55" fill="none" stroke="rgba(148,163,184,0.1)" stroke-width="10"/>
+                        <circle cx="60" cy="60" r="55" fill="none" stroke="#3b82f6" stroke-width="10" stroke-dasharray="${score*3.45} 345" stroke-linecap="round"/>
+                      </svg>
+                      <div class="absolute inset-0 flex items-center justify-center"><div class="text-center"><p class="text-3xl font-bold text-blue-400">${score}</p><p class="text-xs text-gray-400">/100</p></div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Metrics -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="stat-box"><i data-lucide="git-commit" style="width:24px;height:24px;margin:0 auto;color:#60a5fa;"></i><div class="value">${employee.gitCommits}</div><div class="label">Git Commits</div></div>
+                <div class="stat-box"><i data-lucide="check-circle" style="width:24px;height:24px;margin:0 auto;color:#4ade80;"></i><div class="value">${employee.tasksCompleted}</div><div class="label">Tasks Completed</div></div>
+                <div class="stat-box"><i data-lucide="calendar" style="width:24px;height:24px;margin:0 auto;color:#a78bfa;"></i><div class="value">${employee.meetingsAttended}</div><div class="label">Meetings</div></div>
+                <div class="stat-box"><i data-lucide="zap" style="width:24px;height:24px;margin:0 auto;color:#fbbf24;"></i><div class="value">${employee.workHours}h</div><div class="label">Work Hours</div></div>
+              </div>
+
+              <!-- ── MY TASKS WITH PROGRESS UPDATE (NEW FEATURE) ── -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-2 flex items-center gap-2">
+                  <i data-lucide="clipboard-list" style="width:20px;height:20px;color:#60a5fa;"></i>
+                  My Tasks — Update Progress
+                </h2>
+                <p class="text-xs text-gray-400 mb-5">Your progress updates are <span class="text-green-400 font-semibold">instantly visible to HR</span>. Keep them updated!</p>
+
+                <div class="space-y-5" id="emp-task-list">
+                  ${myTasks.length === 0
+                    ? '<p class="text-gray-400 text-sm">No tasks assigned yet.</p>'
+                    : myTasks.map(task => {
+                        const progress = task.progress || 0;
+                        const color = getProgressColor(progress);
+                        const priorityClass = task.taskPriority === 'high' || task.taskPriority === 'critical' ? 'badge-danger' : task.taskPriority === 'medium' ? 'badge-warning' : 'badge-success';
+
+                        return `
+                          <div class="task-card ${progress === 100 ? 'completed' : ''}">
+                            <!-- Task header -->
+                            <div class="flex items-start justify-between mb-3">
+                              <div>
+                                <p class="font-semibold">${task.taskTitle}</p>
+                                <div class="flex gap-2 mt-1">
+                                  <span class="badge ${priorityClass}" style="font-size:11px;padding:2px 8px;">${task.taskPriority}</span>
+                                  <span class="badge" style="font-size:11px;padding:2px 8px;">${task.taskStatus}</span>
+                                </div>
+                              </div>
+                              <div class="text-right">
+                                <p class="text-2xl font-bold" style="color:${color};" id="progress-display-${task.id}">${progress}%</p>
+                                <p class="text-xs text-gray-400" id="progress-label-${task.id}">${getProgressLabel(progress)}</p>
+                              </div>
+                            </div>
+
+                            <!-- Progress bar -->
+                            <div class="progress-track mb-4">
+                              <div class="progress-fill-dynamic" id="progress-bar-${task.id}" style="width:${progress}%;background:linear-gradient(90deg,${color}cc,${color});"></div>
+                            </div>
+
+                            ${progress < 100 ? `
+                            <!-- Update section -->
+                            <div class="bg-slate-900/60 rounded-lg p-4 space-y-3 border border-slate-700/50">
+                              <p class="text-xs font-semibold text-gray-300 uppercase tracking-wide">📤 Post Progress Update</p>
+
+                              <!-- Slider -->
+                              <div>
+                                <div class="flex justify-between text-xs text-gray-400 mb-2">
+                                  <span>0%</span>
+                                  <span id="slider-val-${task.id}" class="font-bold" style="color:${color};">${progress}%</span>
+                                  <span>100%</span>
+                                </div>
+                                <input type="range" min="0" max="100" step="5" value="${progress}" id="progress-slider-${task.id}"
+                                  class="w-full" oninput="UIManager.onSliderInput('${task.id}', this.value)">
+                              </div>
+
+                              <!-- Quick % buttons -->
+                              <div class="flex gap-2 flex-wrap">
+                                ${[25,50,75,100].map(p => `<button onclick="UIManager.setSlider('${task.id}',${p})" class="text-xs py-1 px-3 rounded-full border border-slate-600 hover:border-blue-500 hover:text-blue-400 transition text-gray-300">${p}%</button>`).join('')}
+                              </div>
+
+                              <!-- Note -->
+                              <textarea id="progress-note-${task.id}" placeholder="Add a note about your progress (e.g., 'Completed unit tests, starting integration')" class="w-full text-sm" rows="2" style="resize:none;">${task.progressNote || ''}</textarea>
+
+                              <!-- Submit -->
+                              <button onclick="UIManager.submitProgressUpdate('${task.id}')" class="btn-success w-full flex items-center justify-center gap-2">
+                                <i data-lucide="send" style="width:14px;height:14px;"></i> Send Progress Update to HR
+                              </button>
+                            </div>
+                            ` : `
+                            <div class="p-3 rounded-lg bg-green-900/20 border border-green-700/30 text-center">
+                              <p class="text-green-400 font-semibold">🎉 Task Completed! Well done.</p>
+                            </div>`}
+
+                            <!-- Update history -->
+                            ${task.progressLog && task.progressLog.length > 0 ? `
+                              <div class="mt-3">
+                                <p class="text-xs text-gray-500 mb-2">Update History:</p>
+                                <div class="space-y-2 max-h-32 overflow-y-auto">
+                                  ${[...task.progressLog].reverse().map((log, i) => `
+                                    <div class="update-log-entry ${i===0?'latest':''}">
+                                      <div class="flex justify-between items-center">
+                                        <span class="font-semibold" style="color:${getProgressColor(log.progress)};">${log.progress}%</span>
+                                        <span class="text-gray-500 text-xs">${timeAgo(log.timestamp)}</span>
+                                      </div>
+                                      ${log.note ? `<p class="text-gray-300 mt-1">"${log.note}"</p>` : ''}
+                                    </div>`).join('')}
+                                </div>
+                              </div>
+                            ` : ''}
+                          </div>`;
+                      }).join('')}
+                </div>
+              </div>
+
+              <!-- Streak & Badges -->
+              <div class="glass-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 class="text-xl font-bold flex items-center gap-2 mb-2"><i data-lucide="flame" style="width:20px;height:20px;color:#ff6b6b;"></i> Current Streak</h2>
+                    <p class="text-3xl font-bold text-orange-400">${employee.streak} days</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm text-gray-400 mb-2">Your Badges</p>
+                    <div class="flex gap-2 flex-wrap justify-end">
+                      ${badges.length > 0 ? badges.map(b=>`<span class="text-2xl" title="${b.label}">${b.icon}</span>`).join('') : '<span class="text-gray-400 text-sm">No badges yet 🚀</span>'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Health & Insights -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4">Health & Insights</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><p class="text-sm text-gray-400 mb-2">Burnout Risk</p>
+                    <span class="badge ${burnout==='high'?'badge-danger':burnout==='medium'?'badge-warning':'badge-success'}">${burnout==='high'?'🔥 High Risk':burnout==='medium'?'⏰ Medium':'✅ Healthy'}</span>
+                  </div>
+                  <div><p class="text-sm text-gray-400 mb-2">Performance Trend</p>
+                    <span class="badge">${trend.trajectory==='upward'?'📈':trend.trajectory==='stable'?'➡️':'📉'} ${trend.trajectory}</span>
+                  </div>
+                </div>
+                <div class="mt-4 space-y-2">
+                  ${insights.map(insight=>`<p class="text-sm p-3 rounded bg-slate-900/50 flex items-start gap-2"><span class="text-lg">${insight.emoji}</span><span>${insight.text}</span></p>`).join('')}
+                </div>
+              </div>
+
+              <!-- AI Chatbot -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2"><i data-lucide="message-circle" style="width:20px;height:20px;color:#60a5fa;"></i> AI Assistant</h2>
+                <div id="chat-history" class="space-y-3 mb-4 max-h-48 overflow-y-auto"></div>
+                <div class="flex gap-2">
+                  <input id="chat-input" type="text" placeholder="Ask about your tasks, performance..." class="flex-1">
+                  <button id="chat-send-btn" class="btn-primary">Send</button>
+                </div>
+              </div>
+
+              <!-- Feedback -->
+              <div class="glass-card p-6">
+                <h2 class="text-xl font-bold mb-4">Share Feedback</h2>
+                <div class="space-y-3">
+                  <textarea id="feedback-text" placeholder="Share your feedback anonymously..." class="w-full" rows="4"></textarea>
+                  <div class="flex items-center gap-2"><input id="feedback-anonymous" type="checkbox" checked><label for="feedback-anonymous" class="text-sm">Post Anonymously</label></div>
+                  <button id="submit-feedback-btn" class="btn-primary w-full">Submit Feedback</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    // ── SLIDER INTERACTIONS ──────────────────────
+    static onSliderInput(taskId, val) {
+      const intVal = parseInt(val);
+      const color = getProgressColor(intVal);
+      const el = document.getElementById(`slider-val-${taskId}`);
+      if (el) { el.textContent = intVal + '%'; el.style.color = color; }
+    }
+
+    static setSlider(taskId, val) {
+      const slider = document.getElementById(`progress-slider-${taskId}`);
+      if (slider) { slider.value = val; this.onSliderInput(taskId, val); }
+    }
+
+    static submitProgressUpdate(taskId) {
+      const slider = document.getElementById(`progress-slider-${taskId}`);
+      const noteEl = document.getElementById(`progress-note-${taskId}`);
+      if (!slider) return;
+
+      const newProgress = parseInt(slider.value);
+      const note = noteEl ? noteEl.value.trim() : '';
+
+      if (!note) {
+        noteEl.focus();
+        noteEl.style.borderColor = '#ef4444';
+        noteEl.placeholder = '⚠️ Please add a note describing what you\'ve done...';
+        setTimeout(() => { noteEl.style.borderColor = ''; noteEl.placeholder = 'Add a note about your progress...'; }, 3000);
+        return;
+      }
+
+      State.updateTaskProgress(taskId, newProgress, note);
+
+      // Show toast
+      this.showToast(`✅ Progress updated to ${newProgress}%! HR has been notified.`, 'success');
+      this.render();
+    }
+
+    static showToast(message, type = 'info') {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        background: ${type === 'success' ? 'linear-gradient(135deg,#16a34a,#22c55e)' : 'linear-gradient(135deg,#2563eb,#3b82f6)'};
+        color: white; padding: 14px 24px; border-radius: 12px; font-weight: 600;
+        z-index: 9999; animation: slideIn 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        max-width: 90vw; text-align: center;
+      `;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    // ── HR TASK DETAIL MODAL ──────────────────────
+    static showHRTaskDetail(taskId) {
+      const task = State.tasks.find(t => t.id === taskId);
+      if (!task) return;
+      const emp = State.employees.find(e => e.email === task.taskAssignedTo);
+      const progress = task.progress || 0;
+      const color = getProgressColor(progress);
+
+      const modal = document.getElementById('hr-task-detail-modal');
+      const content = document.getElementById('hr-task-detail-content');
+
+      content.innerHTML = `
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold">${task.taskTitle}</h2>
+          <button onclick="document.getElementById('hr-task-detail-modal').style.display='none'" class="text-2xl cursor-pointer text-gray-400 hover:text-white">×</button>
+        </div>
+
+        <!-- Progress circle + bar -->
+        <div class="flex items-center gap-6 mb-6 p-4 bg-slate-900/60 rounded-xl">
+          <div class="relative w-24 h-24 shrink-0">
+            <svg class="w-24 h-24 transform -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(148,163,184,0.1)" stroke-width="12"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="${color}" stroke-width="12" stroke-dasharray="${progress*3.14} 314" stroke-linecap="round"/>
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <div class="text-center"><p class="text-2xl font-bold" style="color:${color};">${progress}%</p></div>
+            </div>
+          </div>
+          <div class="flex-1">
+            <p class="text-lg font-semibold mb-1" style="color:${color};">${getProgressLabel(progress)}</p>
+            <div class="progress-track mb-2"><div class="progress-fill-dynamic" style="width:${progress}%;background:linear-gradient(90deg,${color}cc,${color});"></div></div>
+            <p class="text-xs text-gray-400">Last updated: ${timeAgo(task.progressUpdatedAt)}</p>
+          </div>
+        </div>
+
+        <!-- Task info -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div><p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Assigned To</p><p class="font-semibold">${emp ? emp.name : '⚠️ Unassigned'}</p>${emp ? `<p class="text-xs text-gray-400">${emp.department}</p>` : ''}</div>
+          <div><p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Priority</p><span class="badge ${task.taskPriority==='high'||task.taskPriority==='critical'?'badge-danger':task.taskPriority==='medium'?'badge-warning':'badge-success'}">${task.taskPriority}</span></div>
+          <div><p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Status</p><span class="badge">${task.taskStatus}</span></div>
+          <div><p class="text-gray-400 text-xs uppercase tracking-wide mb-1">Created</p><p class="text-sm">${timeAgo(task.createdAt)}</p></div>
+        </div>
+
+        <!-- Progress log -->
+        <div>
+          <p class="text-gray-400 text-xs uppercase tracking-wide mb-3">📋 Full Progress Log (${task.progressLog ? task.progressLog.length : 0} updates)</p>
+          ${task.progressLog && task.progressLog.length > 0
+            ? `<div class="space-y-2 max-h-48 overflow-y-auto">
+                ${[...task.progressLog].reverse().map((log, i) => `
+                  <div class="update-log-entry ${i===0?'latest':''}">
+                    <div class="flex justify-between items-center">
+                      <span class="font-bold text-sm" style="color:${getProgressColor(log.progress)};">${log.progress}% complete</span>
+                      <span class="text-gray-500 text-xs">${timeAgo(log.timestamp)}</span>
+                    </div>
+                    ${log.note ? `<p class="text-gray-300 mt-1">"${log.note}"</p>` : '<p class="text-gray-500 italic text-xs">No note</p>'}
+                  </div>`).join('')}
+              </div>`
+            : '<p class="text-gray-500 text-sm italic">No progress updates posted yet by the employee.</p>'}
+        </div>
+
+        <button onclick="document.getElementById('hr-task-detail-modal').style.display='none'" class="btn-secondary w-full mt-6">Close</button>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    // ── EMPLOYEE DETAIL MODAL ────────────────────
+    static showEmployeeDetail(email) {
+      const employee = State.employees.find(e => e.email === email);
+      const score = PerformanceAI.calculatePerformanceScore(employee);
+      const burnout = PerformanceAI.detectBurnout(employee);
+      const badges = GamificationEngine.awardBadges(employee);
+      const insights = PerformanceAI.generateInsights(employee);
+      const empTasks = State.tasks.filter(t => t.taskAssignedTo === email);
+
+      const modal = document.getElementById('employee-detail-modal');
+      const content = document.getElementById('employee-detail-content');
+
+      content.innerHTML = `
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold">${employee.name}</h2>
+          <button id="close-employee-modal" class="text-2xl cursor-pointer text-gray-400 hover:text-white">×</button>
+        </div>
+        <div class="space-y-4">
+          <div><p class="text-gray-400 text-sm">Performance Score</p><p class="text-2xl font-bold text-blue-400">${score}/100</p></div>
+          <div><p class="text-gray-400 text-sm mb-2">Metrics</p>
+            <div class="space-y-1 text-sm">
+              <p>📊 Git Commits: ${employee.gitCommits}</p><p>✅ Tasks Completed: ${employee.tasksCompleted}</p>
+              <p>📅 Meetings: ${employee.meetingsAttended}</p><p>⏱️ Work Hours: ${employee.workHours}h</p>
+            </div>
+          </div>
+          ${empTasks.length > 0 ? `
+            <div><p class="text-gray-400 text-sm mb-2">Task Progress</p>
+              <div class="space-y-2">
+                ${empTasks.map(t => {
+                  const p = t.progress || 0;
+                  const c = getProgressColor(p);
+                  return `<div class="p-2 rounded bg-slate-900/50">
+                    <div class="flex justify-between text-sm mb-1"><span>${t.taskTitle}</span><span style="color:${c};font-weight:600;">${p}%</span></div>
+                    <div class="progress-track"><div class="progress-fill-dynamic" style="width:${p}%;background:linear-gradient(90deg,${c}cc,${c});"></div></div>
+                    ${t.progressNote ? `<p class="text-xs text-gray-400 mt-1">"${t.progressNote}"</p>` : ''}
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>` : ''}
+          <div><span class="badge ${burnout==='high'?'badge-danger':burnout==='medium'?'badge-warning':'badge-success'}">${burnout==='high'?'🔥 Burnout Risk':burnout==='medium'?'⏰ Medium':'✅ Healthy'}</span></div>
+          <div><p class="text-gray-400 text-sm mb-2">Badges</p><div class="flex gap-2">${badges.map(b=>`<span class="text-2xl" title="${b.label}">${b.icon}</span>`).join('')||'<p class="text-sm text-gray-400">No badges yet</p>'}</div></div>
+          <div class="space-y-2">${insights.map(i=>`<p class="text-sm p-2 bg-slate-900/50 rounded">${i.emoji} ${i.text}</p>`).join('')}</div>
+        </div>
+        <button id="close-employee-modal" class="btn-secondary w-full mt-6">Close</button>
+      `;
+      modal.style.display = 'flex';
+      document.getElementById('close-employee-modal').addEventListener('click', () => { modal.style.display = 'none'; });
+    }
+
+    // ── EVENT LISTENERS ──────────────────────────
+    static attachEventListeners() {
+      // Auth
+      document.getElementById('login-btn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email')?.value || '';
+        const password = document.getElementById('login-password')?.value || '';
+        if (!email || !password) { alert('Please enter email and password'); return; }
+        if (State.login(email, password)) this.render();
+        else alert('Invalid credentials. Try hr@intelliculture.com / hr123');
+      });
+      document.getElementById('login-password')?.addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
+      document.getElementById('signup-toggle')?.addEventListener('click', () => { State.currentView = 'signup'; this.render(); });
+      document.getElementById('signup-role')?.addEventListener('change', (e) => { document.getElementById('department-field').style.display = e.target.value === 'employee' ? 'block' : 'none'; });
+      document.getElementById('signup-btn')?.addEventListener('click', () => {
+        const name = document.getElementById('signup-name').value, email = document.getElementById('signup-email').value,
+          password = document.getElementById('signup-password').value, role = document.getElementById('signup-role').value,
+          department = document.getElementById('signup-department')?.value || 'General';
+        if (name && email && password && role) { if (State.signup(email, password, name, role, department)) { alert('Account created! Please login.'); State.currentView = 'auth'; this.render(); } else alert('Email already exists'); }
+        else alert('Please fill all fields');
+      });
+      document.getElementById('back-to-login')?.addEventListener('click', () => { State.currentView = 'auth'; this.render(); });
+      document.getElementById('logout-btn')?.addEventListener('click', () => { State.currentUser = null; State.currentView = 'auth'; this.render(); });
+
+      // HR - Employee rows
+      document.querySelectorAll('.employee-row').forEach(row => { row.addEventListener('click', () => this.showEmployeeDetail(row.dataset.email)); });
+
+      // HR - Task detail click
+      document.querySelectorAll('.hr-task-detail-btn').forEach(btn => { btn.addEventListener('click', () => this.showHRTaskDetail(btn.dataset.taskId)); });
+
+      // Assign task
+      document.getElementById('assign-task-btn')?.addEventListener('click', () => { document.getElementById('task-assign-modal').style.display = 'flex'; document.getElementById('ai-suggestion').classList.add('hidden'); document.getElementById('task-title').value = ''; });
+      document.getElementById('close-task-modal')?.addEventListener('click', () => { document.getElementById('task-assign-modal').style.display = 'none'; });
+      document.getElementById('auto-assign-btn')?.addEventListener('click', () => {
+        const taskTitle = document.getElementById('task-title').value;
+        const taskPriority = document.getElementById('task-priority').value;
+        if (!taskTitle.trim()) { alert('Please enter a task title first'); return; }
+        const suggestion = PerformanceAI.findBestEmployee(taskTitle, taskPriority, State.employees);
+        if (suggestion) {
+          document.getElementById('suggested-employee').textContent = suggestion.employee.name;
+          document.getElementById('suggested-reason').textContent = suggestion.reason;
+          document.getElementById('ai-suggestion').classList.remove('hidden');
+          document.getElementById('task-assign-to').value = suggestion.employee.email;
+          window.currentSuggestion = suggestion.employee.email;
+        } else alert('No suitable employee found.');
+      });
+      document.getElementById('accept-suggestion-btn')?.addEventListener('click', () => { document.getElementById('task-assign-to').value = window.currentSuggestion; document.getElementById('create-task-btn').click(); });
+      document.getElementById('reject-suggestion-btn')?.addEventListener('click', () => { document.getElementById('ai-suggestion').classList.add('hidden'); document.getElementById('task-assign-to').value = ''; });
+      document.getElementById('create-task-btn')?.addEventListener('click', () => {
+        const title = document.getElementById('task-title').value;
+        const assignTo = document.getElementById('task-assign-to').value;
+        const priority = document.getElementById('task-priority').value;
+        if (title && assignTo) {
+          State.tasks.push({ id: String(Date.now()), taskTitle: title, taskAssignedTo: assignTo, taskPriority: priority, taskStatus: 'pending', progress: 0, progressNote: '', progressUpdatedAt: null, progressLog: [], createdAt: new Date().toISOString() });
+          document.getElementById('task-assign-modal').style.display = 'none';
+          this.showToast('✅ Task created successfully!', 'success');
+          this.render();
+        } else alert('Please select an employee');
+      });
+
+      // Feedback
+      document.getElementById('view-feedback-btn')?.addEventListener('click', () => {
+        const feedbackList = document.getElementById('feedback-list');
+        feedbackList.innerHTML = State.feedback.map(f => `<div class="p-3 rounded bg-slate-900/50 border border-slate-700"><p class="text-sm mb-1">${f.feedbackAnonymous ? '🔒 Anonymous' : f.email}</p><p class="text-sm text-gray-300">${f.feedbackText}</p></div>`).join('') || '<p class="text-gray-400 text-sm">No feedback yet</p>';
+        document.getElementById('feedback-modal').style.display = 'flex';
+      });
+      document.getElementById('close-feedback-modal')?.addEventListener('click', () => { document.getElementById('feedback-modal').style.display = 'none'; });
+      document.getElementById('export-report-btn')?.addEventListener('click', () => this.exportReport());
+
+      // HR Chat
+      document.getElementById('hr-chat-btn')?.addEventListener('click', () => { document.getElementById('hr-chat-modal').style.display = 'flex'; document.getElementById('hr-chat-input').focus(); });
+      document.getElementById('close-hr-chat-modal')?.addEventListener('click', () => { document.getElementById('hr-chat-modal').style.display = 'none'; });
+      document.getElementById('hr-chat-send-btn')?.addEventListener('click', () => {
+        const input = document.getElementById('hr-chat-input');
+        const query = input.value.trim();
+        if (query) {
+          const chatHistory = document.getElementById('hr-chat-history');
+          const response = ChatbotEngine.generateHRResponse(query, State.employees, State.tasks);
+          chatHistory.innerHTML += `<div class="text-right animate-slide"><p class="text-sm bg-blue-900/30 p-2 rounded inline-block max-w-xs text-left">${query}</p></div><div class="animate-slide"><p class="text-sm bg-slate-900/50 p-3 rounded inline-block max-w-xs" style="text-align:left;">${response}</p></div>`;
+          input.value = ''; chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+      });
+      document.getElementById('hr-chat-input')?.addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('hr-chat-send-btn').click(); });
+      document.querySelectorAll('.hr-quick-query').forEach(btn => { btn.addEventListener('click', () => { document.getElementById('hr-chat-input').value = btn.dataset.query; document.getElementById('hr-chat-send-btn').click(); }); });
+
+      // Employee Chat
+      document.getElementById('chat-send-btn')?.addEventListener('click', () => {
+        const input = document.getElementById('chat-input');
+        const query = input.value.trim();
+        if (query) {
+          const chatHistory = document.getElementById('chat-history');
+          const response = ChatbotEngine.generateResponse(query, State.employees, State.currentUser);
+          chatHistory.innerHTML += `<div class="text-right"><p class="text-sm bg-blue-900/30 p-2 rounded inline-block max-w-xs text-left">${query}</p></div><div><p class="text-sm bg-slate-900/50 p-2 rounded inline-block max-w-xs">${response}</p></div>`;
+          input.value = ''; chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+      });
+      document.getElementById('chat-input')?.addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('chat-send-btn').click(); });
+
+      // Employee Feedback
+      document.getElementById('submit-feedback-btn')?.addEventListener('click', () => {
+        const text = document.getElementById('feedback-text').value;
+        const anonymous = document.getElementById('feedback-anonymous').checked;
+        if (text.trim()) { State.feedback.push({ id: String(State.feedback.length+1), feedbackText: text, feedbackAnonymous: anonymous, email: State.currentUser.email, createdAt: new Date().toISOString() }); document.getElementById('feedback-text').value = ''; alert('Thank you for your feedback!'); }
+      });
+
+      // Modal overlay close
+      document.querySelectorAll('.modal-overlay').forEach(modal => { modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; }); });
+
+      // Notification bell
+      const notifBell = document.getElementById('notification-bell');
+      const notifPanel = document.getElementById('notification-panel');
+      if (notifBell && notifPanel) {
+        notifBell.addEventListener('click', e => { e.stopPropagation(); notifPanel.classList.toggle('hidden'); });
+        document.addEventListener('click', e => { if (!notifBell.contains(e.target) && !notifPanel.contains(e.target)) notifPanel.classList.add('hidden'); });
+      }
+    }
+
+    static exportReport() {
+      const leaderboard = GamificationEngine.calculateLeaderboardPosition(State.employees);
+      let csv = 'Rank,Name,Department,Performance Score,Git Commits,Tasks,Meetings,Work Hours,Burnout Risk,Streak,Assigned Tasks,Avg Task Progress\n';
+      leaderboard.forEach(emp => {
+        const burnout = PerformanceAI.detectBurnout(emp);
+        const empTasks = State.tasks.filter(t => t.taskAssignedTo === emp.email);
+        const avgProgress = empTasks.length ? Math.round(empTasks.reduce((a,t)=>a+(t.progress||0),0)/empTasks.length) : 'N/A';
+        csv += `${emp.rank},${emp.name},${emp.department},${emp.score},${emp.gitCommits},${emp.tasksCompleted},${emp.meetingsAttended},${emp.workHours},${burnout},${emp.streak},${empTasks.length},${avgProgress}%\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `intelliculture-report-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    }
+
+    static getHRNotifications() {
+      const notifications = [];
+      State.employees.forEach(emp => {
+        const burnout = PerformanceAI.detectBurnout(emp);
+        if (burnout === 'high') notifications.push({ type: 'burnout', icon: '🔥', title: `High Burnout Risk - ${emp.name}`, message: `${emp.name} shows signs of high burnout risk. Consider workload adjustment.`, time: 'Now', priority: 1 });
+        else if (burnout === 'medium') notifications.push({ type: 'burnout', icon: '⏰', title: `Medium Burnout Risk - ${emp.name}`, message: `${emp.name} is showing moderate stress. Monitor closely.`, time: '5 min ago', priority: 2 });
+      });
+      // Progress update notifications
+      const recentUpdates = State.notifications.filter(n => n.notificationType === 'progress' && !n.isRead);
+      recentUpdates.forEach(n => notifications.push({ type: 'progress', icon: '📊', title: 'Task Progress Update', message: n.notificationMessage, time: timeAgo(n.createdAt), priority: 1 }));
+      const urgentTasks = State.tasks.filter(t => t.taskStatus === 'pending' || t.taskStatus === 'in-progress');
+      if (urgentTasks.length > 2) notifications.push({ type: 'deadline', icon: '⏰', title: `${urgentTasks.length} Active Tasks`, message: `${urgentTasks.length} tasks in progress. Check progress updates.`, time: '15 min ago', priority: 2 });
+      const topPerformers = State.employees.filter(e => PerformanceAI.calculatePerformanceScore(e) > 85);
+      if (topPerformers.length > 0) notifications.push({ type: 'achievement', icon: '⭐', title: `${topPerformers.length} Top Performers`, message: `${topPerformers.length} employees performing excellently!`, time: '30 min ago', priority: 3 });
+      return notifications.sort((a, b) => a.priority - b.priority);
+    }
+
+    static getEmployeeNotifications(employee) {
+      const notifications = [];
+      const burnout = PerformanceAI.detectBurnout(employee);
+      if (burnout === 'high') notifications.push({ type: 'burnout', icon: '🔥', title: 'High Burnout Risk', message: 'You\'re working too hard! Consider taking a break.', time: 'Now', priority: 1 });
+      else if (burnout === 'medium') notifications.push({ type: 'burnout', icon: '⏰', title: 'Moderate Stress Detected', message: 'Your workload is increasing. Remember to take breaks.', time: '10 min ago', priority: 1 });
+      const myTasks = State.tasks.filter(t => t.taskAssignedTo === employee.email);
+      const staleTasks = myTasks.filter(t => t.progress < 100 && t.taskStatus !== 'completed' && (!t.progressUpdatedAt || Date.now() - new Date(t.progressUpdatedAt) > 1000*60*60*4));
+      if (staleTasks.length > 0) notifications.push({ type: 'deadline', icon: '📋', title: `${staleTasks.length} Task${staleTasks.length>1?'s':''} Need Progress Update`, message: `HR is waiting for updates on ${staleTasks.length} task(s). Post your progress!`, time: '1 hour ago', priority: 1 });
+      const score = PerformanceAI.calculatePerformanceScore(employee);
+      if (score > 85) notifications.push({ type: 'achievement', icon: '🌟', title: 'Excellent Performance!', message: 'You\'re doing great! Keep up this momentum.', time: '45 min ago', priority: 3 });
+      if (employee.streak >= 7 && employee.streak % 7 === 0) notifications.push({ type: 'achievement', icon: '🔥', title: `${employee.streak}-Day Streak!`, message: `Amazing! You've maintained a ${employee.streak}-day streak!`, time: '1 hour ago', priority: 3 });
+      return notifications.sort((a, b) => a.priority - b.priority);
+    }
+  }
+
+  // ── BOOT ─────────────────────────────────────
+  UIManager.init();
+
+  // Simulate real-time metric changes
+  setInterval(() => {
+    if (!State.currentUser) return;
+    State.employees.forEach(emp => {
+      if (Math.random() > 0.7) emp.gitCommits += Math.floor(Math.random() * 3);
+      if (Math.random() > 0.9) emp.tasksCompleted += Math.floor(Math.random() * 2);
+      if (emp.gitCommits > 0 && emp.tasksCompleted > 0) emp.streak = Math.min(emp.streak + 1, 30);
+      emp.lastActive = new Date().toISOString();
+    });
+  }, 30000);
+  </script>
+ </body>
+</html>
